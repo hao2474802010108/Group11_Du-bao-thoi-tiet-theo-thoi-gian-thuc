@@ -1,0 +1,80 @@
+MÂY VIỆT — NGUỒN API VÀ CÁCH KIỂM TRA
+
+1. DỮ LIỆU THỜI TIẾT
+
+Nhà cung cấp: Open-Meteo (https://open-meteo.com/).
+Địa chỉ API ứng dụng thực sự gọi:
+https://api.open-meteo.com/v1/forecast
+
+Tài liệu chính thức:
+https://open-meteo.com/en/docs
+
+File mã nguồn trên laptop: src/lib/weather-client.ts
+- forecastUrl(): tạo URL lấy dự báo cho tọa độ đã chọn.
+- fetchForecast(): tải dữ liệu hiện tại, từng giờ và 7 ngày.
+- fetchCities(): lấy thông tin nhiều địa điểm trong một yêu cầu.
+
+Các tham số chính:
+- latitude, longitude: vĩ độ và kinh độ địa điểm.
+- timezone=Asia/Ho_Chi_Minh: giờ Việt Nam.
+- current: nhiệt độ, độ ẩm, cảm nhận, gió, mã thời tiết hiện tại.
+- hourly: nhiệt độ, khả năng mưa, gió... mỗi giờ.
+- daily: nhiệt độ cao/thấp, bình minh/hoàng hôn... mỗi ngày.
+- forecast_days=7: lấy 7 ngày dự báo.
+
+Ví dụ để tự xem JSON tại TP.HCM:
+https://api.open-meteo.com/v1/forecast?latitude=10.7769&longitude=106.7009&current=temperature_2m,weather_code&hourly=temperature_2m,precipitation_probability,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min&timezone=Asia%2FHo_Chi_Minh&forecast_days=7
+
+Đây là một ví dụ rút gọn để dễ xem. URL đầy đủ mà ứng dụng đang dùng
+nằm ở nút “Xem dữ liệu gốc” ngay dưới phần dự báo từng giờ.
+
+2. TÌM ĐỊA ĐIỂM
+
+Địa chỉ API:
+https://geocoding-api.open-meteo.com/v1/search
+
+Tài liệu chính thức:
+https://open-meteo.com/en/docs/geocoding-api
+
+Dữ liệu địa danh dựa trên GeoNames. Hàm searchPlaces() trong
+src/lib/weather-client.ts gửi tên địa điểm, ngôn ngữ vi và mã nước VN.
+
+3. CÁCH TỰ KIỂM TRA TRÊN TRÌNH DUYỆT
+
+- Mở ứng dụng, chọn một địa điểm.
+- Nhấn “Xem dữ liệu gốc” dưới phần “24 giờ tới” để xem JSON từ API.
+- Hoặc nhấn F12 > Network, chọn Fetch/XHR rồi tải lại trang.
+- Tìm yêu cầu tới api.open-meteo.com, chọn Response để xem dữ liệu.
+- Nếu đang dùng dữ liệu đã lưu, có thể chưa phát sinh yêu cầu mới.
+
+Mảng hourly.time chứa các giờ liên tiếp: 23:00, 00:00, 01:00, 02:00...
+Mảng hourly.temperature_2m cùng chỉ số chứa nhiệt độ của giờ tương ứng.
+Bản cập nhật hiển thị mọi giờ, thay vì bỏ qua hai giờ như bản cũ.
+Chọn một giờ để xem nhiệt độ, khả năng mưa, gió và độ ẩm.
+
+4. PYTHON VÀ CÁCH KHỞI CHẠY
+
+Bản này chạy bằng python app.py, dùng thư viện chuẩn để phục vụ dist
+và tự mở trình duyệt. Không cần file BAT, Flask, Node hay pip để xem.
+
+app.py không chuyển yêu cầu Open-Meteo qua một proxy Python.
+Trình duyệt vẫn lấy dữ liệu trực tiếp từ hai API bên trên; phần giao diện
+và cơ chế cache/debounce/xử lý 429 được giữ nguyên.
+Python không tự dự báo thời tiết, không dùng dữ liệu ngẫu nhiên/CSV thay API.
+Đổi ngôn ngữ khởi chạy không làm thay đổi độ chính xác của dự báo.
+
+5. GIẤY PHÉP VÀ ĐỘ MỚI CỦA DỮ LIỆU
+
+Dữ liệu theo CC BY 4.0 và được ghi nguồn trong ứng dụng. Gói API miễn
+phí dành cho mục đích phi thương mại và có giới hạn lượt sử dụng.
+Điều khoản: https://open-meteo.com/en/terms
+
+Thời tiết hiện tại được ước tính từ mô hình, không phải số đo cảm biến
+ngay tại vị trí của bạn. Kiểm tra mỗi 15 phút không đồng nghĩa nguồn
+phát hành mô hình mới mỗi 15 phút. Hiển thị từng giờ sử dụng dữ liệu
+đã có trong cùng một phản hồi API, không gọi API riêng cho mỗi giờ.
+
+ĐỌC CODE CÓ CHÚ THÍCH
+README.md: hướng dẫn chi tiết, thư viện, API và cách tối ưu.
+GIAI_THICH_CODE.md: bảng tra cứu các chú thích theo file và số dòng.
+Trong VS Code: nhấn Ctrl+P để tìm file, Ctrl+G để đến số dòng.

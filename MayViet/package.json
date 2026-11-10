@@ -1,0 +1,31 @@
+{
+  "name": "may-viet",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Ứng dụng thời tiết Việt Nam — Mây Việt",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5173",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 5173",
+    "test": "node --experimental-strip-types --test tests/weather-client.test.mjs tests/hourly-timeline.test.mjs",
+    "start": "python app.py"
+  },
+  "dependencies": {
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "recharts": "3.8.0",
+    "lucide-react": "1.31.0"
+  },
+  "devDependencies": {
+    "vite": "8.0.13",
+    "@vitejs/plugin-react": "6.0.2",
+    "typescript": "5.9.3",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@types/node": "22.19.19"
+  }
+}

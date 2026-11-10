@@ -1,0 +1,577 @@
+/* [GLASS-000] CHÚ THÍCH CSS: xem README để biết thứ tự nạp và nơi chỉnh màu/độ trong. */
+/* Bề mặt kính mờ; có nền đặc dự phòng khi trình duyệt không hỗ trợ blur. */
+/* [GLASS-001] Ghi đè biến thiết kế sáng: nền pastel, thẻ bán trong suốt, viền sáng và bóng nhẹ. */
+:root {
+  --bg: #eef3fb;
+  /* [GLASS-002] Alpha 0.76 nghĩa là nền thẻ có độ đục 76%; giảm số cuối để nhìn xuyên nhiều hơn. Không làm mờ chữ bên trong. */
+  --card: rgba(255, 255, 255, 0.76);
+  --glass-edge: rgba(255, 255, 255, 0.82);
+  /* [GLASS-003] Độ đục riêng cho thanh bên, độc lập với thẻ nội dung. */
+  --sidebar-glass: rgba(255, 255, 255, 0.62);
+  /* [GLASS-004] Bảng nổi gần đặc hơn để chữ vẫn dễ đọc trên nội dung phía sau. */
+  --popup-glass: rgba(255, 255, 255, 0.96);
+  --glass-shadow:
+    0 12px 45px rgba(49, 78, 120, 0.045), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  /* [GLASS-005] Ba lớp radial-gradient tạo vùng sáng mềm thay vì một nền phẳng. */
+  --canvas-glow:
+    radial-gradient(
+      ellipse at 9% 12%,
+      rgba(144, 190, 249, 0.25),
+      transparent 43%
+    ),
+    radial-gradient(
+      ellipse at 95% 32%,
+      rgba(215, 199, 246, 0.2),
+      transparent 43%
+    ),
+    radial-gradient(
+      ellipse at 42% 89%,
+      rgba(251, 225, 180, 0.17),
+      transparent 45%
+    );
+}
+/* [GLASS-006] Các biến kính mờ tương ứng cho giao diện tối, tránh dùng màu trắng trong suốt quá sáng. */
+:root[data-theme="dark"] {
+  --bg: #101a2a;
+  --card: rgba(25, 37, 56, 0.76);
+  --glass-edge: rgba(171, 199, 237, 0.13);
+  --sidebar-glass: rgba(23, 34, 51, 0.66);
+  --popup-glass: rgba(25, 37, 56, 0.97);
+  --glass-shadow:
+    0 12px 45px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(210, 225, 250, 0.035);
+  --canvas-glow:
+    radial-gradient(
+      ellipse at 8% 15%,
+      rgba(64, 118, 186, 0.2),
+      transparent 44%
+    ),
+    radial-gradient(
+      ellipse at 97% 37%,
+      rgba(115, 83, 158, 0.15),
+      transparent 46%
+    ),
+    radial-gradient(
+      ellipse at 38% 86%,
+      rgba(40, 111, 119, 0.1),
+      transparent 43%
+    );
+}
+body {
+  position: relative;
+  isolation: isolate;
+  background: var(--bg);
+}
+/* [GLASS-007] Lớp màu nền cố định; pointer-events none cho phép bấm xuyên qua lớp trang trí. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background: var(--canvas-glow);
+}
+/* [GLASS-008] Bo góc, viền và bóng chung giúp bề mặt thẻ mềm hơn. */
+.card {
+  border-color: var(--glass-edge);
+  box-shadow: var(--glass-shadow);
+  border-radius: 21px;
+}
+.card,
+.sidebar,
+.search-box,
+.icon-button,
+.location-tab.active,
+.page-footer {
+  /* [GLASS-009] Làm mờ và tăng nhẹ độ bão hòa của NỀN SAU bề mặt, không làm nhòe chữ. Dòng -webkit- hỗ trợ trình duyệt tương ứng. */
+  backdrop-filter: blur(20px) saturate(125%);
+  -webkit-backdrop-filter: blur(20px) saturate(125%);
+}
+/* [GLASS-010] Thanh bên dùng biến nền bán trong suốt riêng. */
+.sidebar {
+  background: var(--sidebar-glass);
+  border-right-color: var(--glass-edge);
+}
+.search-box,
+.icon-button,
+.location-tab.active {
+  border-color: var(--glass-edge);
+  box-shadow: 0 5px 24px rgba(62, 87, 129, 0.025);
+}
+/* [GLASS-011] Gradient RGBA cho thẻ hiện tại; alpha chỉ áp dụng nền, không dùng opacity toàn thẻ. */
+.current-card {
+  background: linear-gradient(
+    112deg,
+    rgba(234, 245, 255, 0.82),
+    rgba(210, 231, 254, 0.67)
+  );
+  border-color: rgba(255, 255, 255, 0.6);
+  border-radius: 23px;
+  box-shadow:
+    0 15px 48px rgba(60, 107, 163, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+/* [GLASS-012] Thẻ ban đêm dùng gradient đậm để giữ tương phản. */
+.current-card.current-night {
+  background: linear-gradient(
+    115deg,
+    rgba(31, 53, 85, 0.88),
+    rgba(38, 73, 112, 0.81)
+  );
+  border-color: rgba(188, 213, 245, 0.14);
+}
+:root[data-theme="dark"] .current-card:not(.current-night) {
+  background: linear-gradient(
+    112deg,
+    rgba(172, 201, 231, 0.88),
+    rgba(146, 182, 221, 0.77)
+  );
+  border-color: rgba(210, 230, 255, 0.25);
+}
+/* [GLASS-013] Thẻ thành phố dùng nền và blur riêng; các lớp city-1/2/3 đổi sắc thái. */
+.city-card {
+  background-color: rgba(238, 244, 252, 0.68);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-color: var(--glass-edge);
+}
+.city-card.city-1 {
+  background-color: rgba(239, 236, 251, 0.67);
+}
+.city-card.city-2 {
+  background-color: rgba(229, 247, 243, 0.67);
+}
+.city-card.city-3 {
+  background-color: rgba(242, 246, 228, 0.68);
+}
+/* [GLASS-014] Thẻ gợi ý dùng màu xanh dịu, bán trong suốt. */
+.tip-card {
+  background: rgba(232, 244, 235, 0.72);
+  border-color: var(--glass-edge);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+:root[data-theme="dark"] .tip-card {
+  background: rgba(32, 55, 46, 0.72);
+  border-color: var(--glass-edge);
+}
+.settings-popover,
+.search-results,
+.info-modal,
+.chart-tooltip,
+.toast {
+  background: var(--popup-glass);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+.sidebar-bottom {
+  background: rgba(229, 240, 255, 0.56);
+}
+:root[data-theme="dark"] .sidebar-bottom {
+  background: rgba(37, 60, 89, 0.5);
+}
+/* [GLASS-015] Cho khung theo giờ được co trong grid (min-width 0), nội dung dài cuộn ở vùng con. */
+.hourly-glass {
+  min-width: 0;
+  padding-bottom: 17px;
+}
+/* [GLASS-016] Đặt tab chỉ số và nút mũi tên trên cùng một hàng. */
+.hourly-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+}
+.hourly-glass .chart-tabs {
+  margin: 0;
+  gap: 4px;
+}
+/* [GLASS-017] Nhóm mũi tên không bị co khi khung hẹp. */
+.hour-navigation {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.hour-navigation button {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--glass-edge);
+  background: rgba(147, 180, 224, 0.075);
+  color: var(--subtle);
+  border-radius: 9px;
+}
+.hour-navigation button:hover {
+  background: var(--blue-tint);
+  color: var(--blue);
+}
+/* [GLASS-018] Nút ở đầu/cuối vùng cuộn được giảm độ nổi bật và không còn tác dụng. */
+.hour-navigation button:disabled {
+  cursor: default;
+  opacity: 0.3;
+}
+/* [GLASS-019] Dòng hướng dẫn cuộn và số mốc dữ liệu thật. */
+.timeline-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 8px;
+}
+.timeline-hint > span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.tiny-live-dot {
+  width: 4px;
+  height: 4px;
+  background: #80adcc;
+  border-radius: 50%;
+  margin-right: 2px;
+}
+/* [GLASS-020] Chỉ vùng biểu đồ/thẻ cuộn ngang; chặn tràn sang toàn trang. */
+.hourly-scroller {
+  max-width: 100%;
+  /* [GLASS-021] Bật thanh cuộn ngang khi 24 mốc rộng hơn vùng hiển thị. */
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(135, 165, 206, 0.45) transparent;
+  padding-bottom: 8px;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 10px;
+  outline-offset: 2px;
+}
+.hourly-scroller::-webkit-scrollbar {
+  height: 4px;
+}
+.hourly-scroller::-webkit-scrollbar-thumb {
+  background: rgba(135, 165, 206, 0.45);
+  border-radius: 4px;
+}
+/* [GLASS-022] Khung bên trong có độ rộng do React tính theo số giờ ×72 +32. */
+.timeline-inner {
+  min-width: 100%;
+}
+/* [GLASS-023] Giữ chiều cao biểu đồ ổn định, trong khi độ rộng theo toàn bộ danh sách giờ. */
+.hourly-glass .weather-chart {
+  height: 151px;
+  margin: 7px 0 14px;
+}
+/* [GLASS-024] Lưới có số cột do JSX truyền; padding trái dành cho trục Y rộng 32 px. */
+.hourly-glass .hourly-cards {
+  display: grid;
+  gap: 0;
+  overflow: visible;
+  padding: 12px 0 5px 32px;
+  border-top: 1px solid rgba(139, 161, 192, 0.13);
+  scrollbar-width: auto;
+}
+/* [GLASS-025] Mỗi nút giờ chứa thời gian, ngày, icon, nhiệt độ và xác suất mưa. */
+.hourly-glass .hour-item {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 9px;
+  min-width: 0;
+  width: 100%;
+  padding: 10px 5px 11px;
+  border: 1px solid transparent;
+  border-radius: 13px;
+  background: transparent;
+  line-height: 1.2;
+  text-align: center;
+}
+.hourly-glass .hour-item > span {
+  font-size: 10px;
+  white-space: nowrap;
+  color: var(--subtle);
+}
+.hourly-glass .hour-item > span.hour-date {
+  font-size: 8px;
+  color: var(--muted);
+  margin-top: -4px;
+}
+.hourly-glass .hour-item > strong {
+  font-size: 15px;
+  font-weight: 700;
+}
+.hourly-glass .hour-item > small {
+  font-size: 9px;
+  gap: 3px;
+}
+.hourly-glass .hour-item > svg {
+  width: 27px;
+  height: 27px;
+}
+.hourly-glass .hour-item.hour-now {
+  background: rgba(85, 143, 233, 0.075);
+}
+/* [GLASS-026] Đánh dấu mốc được chọn để đọc chi tiết bên dưới. */
+.hourly-glass .hour-item.hour-selected {
+  background: rgba(78, 139, 232, 0.11);
+  border-color: rgba(96, 153, 235, 0.25);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+.hourly-glass .hour-item.hour-selected > span:first-child,
+.hourly-glass .hour-item.hour-selected > strong {
+  color: var(--blue);
+}
+.hourly-glass .hour-item:hover {
+  background: rgba(105, 155, 228, 0.085);
+  transform: translateY(-1px);
+}
+/* [GLASS-027] Khung chi tiết giữ vị trí ngoài vùng cuộn ngang. */
+.selected-hour-detail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin: 12px 0 0;
+  padding: 12px 13px;
+  border-radius: 12px;
+  background: rgba(135, 169, 214, 0.065);
+  border: 1px solid rgba(139, 168, 207, 0.1);
+}
+.selected-hour-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--blue);
+  flex-shrink: 0;
+}
+.selected-hour-title > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.selected-hour-title strong {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text);
+}
+.selected-hour-title strong > span {
+  font-size: 9px;
+  color: var(--muted);
+  font-weight: 500;
+}
+.selected-hour-title small {
+  font-size: 8px;
+  color: var(--muted);
+}
+/* [GLASS-028] Sắp xếp bốn chỉ số nhiệt độ, mưa, gió và độ ẩm. */
+.selected-hour-values {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+.selected-hour-values > span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: #8da4c1;
+}
+.selected-hour-values strong {
+  color: var(--subtle);
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+/* [GLASS-029] Hàng nút nguồn và liên kết dữ liệu gốc phía cuối thẻ. */
+.hourly-source {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 15px;
+  font-size: 8px;
+  color: var(--muted);
+}
+.hourly-source button,
+.hourly-source a {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  text-decoration: none;
+  font-size: 8px;
+  color: var(--muted);
+}
+.hourly-source a {
+  color: var(--blue);
+}
+.hourly-source a:hover,
+.hourly-source button:hover {
+  text-decoration: underline;
+}
+/* [GLASS-030] Khối công khai API trong hộp thông tin; URL dài được phép xuống dòng. */
+.api-disclosure {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  background: rgba(117, 162, 224, 0.075);
+  border: 1px solid rgba(117, 162, 224, 0.15);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 24px;
+}
+.api-disclosure > strong {
+  font-size: 11px;
+  color: var(--text);
+}
+.api-disclosure > a {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  line-height: 1.7;
+  color: var(--blue);
+  text-decoration: none;
+}
+.api-disclosure > a:hover {
+  text-decoration: underline;
+}
+.api-disclosure code {
+  font-size: 9px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+  color: var(--subtle);
+}
+.api-disclosure p {
+  font-size: 9px;
+  line-height: 1.9;
+  color: var(--muted);
+  margin-top: 3px;
+}
+/* [GLASS-031] Fallback nền đặc khi trình duyệt không hỗ trợ backdrop-filter, giữ chữ dễ đọc. */
+@supports not (
+  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+) {
+  :root {
+    --card: #fcfdff;
+    --sidebar-glass: #f9fbff;
+  }
+  :root[data-theme="dark"] {
+    --card: #192638;
+    --sidebar-glass: #192638;
+  }
+}
+/* [GLASS-032] Thu gọn các điều khiển theo giờ trên màn hình vừa. */
+@media (max-width: 1080px) {
+  .selected-hour-values {
+    gap: 11px;
+  }
+  .hourly-toolbar {
+    gap: 6px;
+  }
+  .hourly-glass .chart-tabs button {
+    padding: 7px;
+    font-size: 8px;
+  }
+  .hour-navigation {
+    gap: 4px;
+  }
+  .hour-navigation button {
+    width: 25px;
+    height: 25px;
+  }
+  .timeline-hint {
+    font-size: 7px;
+  }
+}
+/* [GLASS-033] Điều chỉnh độ lớn nút/chữ cho điện thoại. */
+@media (max-width: 720px) {
+  .hourly-glass .chart-tabs button {
+    font-size: 9px;
+    padding: 7px 9px;
+  }
+  .timeline-hint {
+    font-size: 8px;
+  }
+  .hour-navigation button {
+    width: 28px;
+    height: 28px;
+  }
+  .card {
+    border-radius: 21px;
+  }
+  .current-card {
+    border-radius: 23px;
+  }
+}
+/* [GLASS-034] Tối ưu khoảng cách trên màn hình nhỏ; vẫn giữ STEP 72 px để không lệch mốc. */
+@media (max-width: 480px) {
+  .hourly-glass .chart-tabs button {
+    font-size: 8px;
+    padding: 7px 6px;
+    gap: 4px;
+  }
+  .hourly-toolbar {
+    gap: 5px;
+  }
+  .hour-navigation {
+    gap: 3px;
+  }
+  .hour-navigation button {
+    width: 25px;
+    height: 26px;
+  }
+  .timeline-hint {
+    font-size: 7px;
+    gap: 6px;
+    line-height: 1.7;
+  }
+  .hourly-glass .weather-chart {
+    height: 143px;
+  }
+  .hourly-glass .hour-item > span {
+    font-size: 10px;
+  }
+  .selected-hour-detail {
+    align-items: flex-start;
+    gap: 13px;
+    padding: 12px;
+  }
+  .selected-hour-values {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 5px;
+  }
+  .selected-hour-values > span {
+    font-size: 9px;
+    gap: 3px;
+  }
+  .selected-hour-values strong {
+    font-size: 9px;
+  }
+  .selected-hour-values svg {
+    width: 12px;
+  }
+  .hourly-source button,
+  .hourly-source a {
+    font-size: 7px;
+  }
+  .hourly-glass .hourly-badge {
+    font-size: 7px;
+  }
+  .hourly-glass .section-heading p {
+    max-width: 210px;
+    line-height: 1.7;
+  }
+  .hourly-glass .chart-tabs button > svg {
+    width: 12px;
+  }
+}

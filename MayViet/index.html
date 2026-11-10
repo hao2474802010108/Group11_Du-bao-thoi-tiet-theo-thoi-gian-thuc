@@ -1,0 +1,29 @@
+<!-- [HTML-000] Vỏ HTML của ứng dụng; giao diện chính được React render từ src/main.tsx. -->
+<!doctype html>
+<!-- [HTML-001] Khai báo ngôn ngữ tiếng Việt cho trình đọc màn hình và trình duyệt. -->
+<html lang="vi">
+  <head>
+    <!-- [HTML-002] UTF-8 giúp tiếng Việt có dấu hiển thị đúng. -->
+    <meta charset="UTF-8" />
+    <!-- [HTML-003] Độ rộng theo màn hình thiết bị để CSS responsive hoạt động. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#3275ee" />
+    <meta
+      name="description"
+      content="Thời tiết Việt Nam, dự báo theo giờ và 7 ngày — Mây Việt."
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <!-- [HTML-004] Biểu tượng tab lấy từ public/favicon.svg; public được Vite chép vào dist. -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- [HTML-005] Mô tả tên/icon/cách mở của ứng dụng web; không tạo chế độ offline khi chưa có service worker. -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <!-- [HTML-006] Tên xuất hiện trên tab trình duyệt; có thể sửa thương hiệu tại đây. -->
+    <title>Mây Việt — Bầu trời trong tầm tay</title>
+  </head>
+  <body>
+    <!-- [HTML-007] React sẽ đưa toàn bộ giao diện vào phần tử này; phải khớp getElementById trong main.tsx. -->
+    <div id="root"></div>
+    <!-- [HTML-008] Vite xử lý TSX từ điểm vào này; mở bằng dev server, không nhấp đúp HTML dưới dạng file://. -->
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
