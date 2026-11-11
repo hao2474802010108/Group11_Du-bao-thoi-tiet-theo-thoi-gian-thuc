@@ -1,0 +1,91 @@
+MÂY VIỆT — MỞ BẰNG PYTHON TRÊN LAPTOP
+
+1. GIẢI NÉN VÀ CHUẨN BỊ
+
+- Dùng Python 3.10 trở lên. Python 3.11 đã có trên máy cũng dùng được.
+- Nếu chưa cài: https://www.python.org/downloads/
+- Khi trình cài có Add Python to PATH, chọn mục đó. Mở lại terminal sau khi cài.
+- Giải nén toàn bộ MayViet_Source_Code.zip.
+- Mở thư mục MayViet: phải có app.py và dist nằm cạnh nhau.
+- Không chỉ chép riêng app.py và không chạy ngay trong ZIP.
+
+2. CHẠY
+
+Mở VS Code > File > Open Folder > chọn MayViet > Terminal > New Terminal.
+Nhập:
+
+python app.py
+
+Nếu Windows không nhận lệnh python nhưng có Python Launcher, dùng:
+
+py app.py
+
+Trình duyệt tự mở. Nếu chưa mở, nhập URL terminal in ra, thường là:
+http://localhost:5173
+
+Giữ terminal đang mở trong lúc dùng. Nhấn Ctrl+C để dừng.
+Nếu cổng 5173 bận, ứng dụng thử thêm 10 cổng; dùng đúng URL được in ra.
+
+Không cần BAT, Node.js, npm, Flask hay cài gói pip để xem bản này.
+requirements.txt chỉ là ghi chú vì app.py dùng thư viện chuẩn Python.
+Dữ liệu dự báo mới vẫn cần Internet; GPS cần quyền trình duyệt/hệ điều hành.
+
+3. TÙY CHỌN
+
+python app.py --help
+python app.py --port 5175
+python app.py --no-open
+python app.py --verbose
+
+--port: chọn cổng bắt đầu khác.
+--no-open: không tự bật trình duyệt.
+--verbose: hiện log yêu cầu file để kiểm tra lỗi.
+macOS/Linux có thể dùng python3 thay python.
+
+4. CÁC FILE ĐỂ HỌC CODE
+
+app.py: máy chủ Python và cách khởi chạy; có chú thích tiếng Việt.
+README.md: hướng dẫn chi tiết, module, nguồn API, tối ưu và cách sửa.
+GIAI_THICH_CODE.md: bảng tra cứu chú thích theo file/số dòng.
+NGUON_API.txt: URL API và cách xem dữ liệu thật.
+src/: mã giao diện React/TypeScript và xử lý dữ liệu có chú thích.
+dist/: giao diện đã build, cần giữ để app.py hoạt động.
+tests/test_app.py: kiểm tra máy chủ Python bằng HTTP thật.
+
+Python thay phần máy chủ/khởi chạy; giao diện hiện tại vẫn mở trong trình duyệt.
+Không phải toàn bộ React/TypeScript đã được viết lại bằng Python.
+
+5. KIỂM TRA PYTHON
+
+Tại thư mục MayViet:
+
+python -m unittest discover -s tests -p "test_*.py" -v
+
+6. KHI MUỐN SỬA GIAO DIỆN
+
+Chỉ trường hợp sửa/build giao diện mới cần Node.js từ 22.13 trở lên.
+Không cần Node để mở app.py thông thường.
+
+npm.cmd ci
+npm.cmd run dev -- --port 5174
+
+Sửa src, lưu để xem thay đổi ở URL Vite in ra. Sau đó:
+
+npm.cmd test
+npm.cmd run build
+
+Tải lại trang do app.py đang phục vụ, hoặc chạy lại python app.py nếu đã dừng.
+Chỉ sửa app.py: lưu, Ctrl+C rồi chạy Python lại; không cần npm build.
+
+7. LỖI THƯỜNG GẶP
+
+- Không nhận python: thử py app.py, kiểm tra cài Python/PATH rồi mở lại terminal.
+- Can't open app.py: chọn đúng thư mục MayViet đã giải nén.
+- Thiếu dist/index.html: giải nén toàn bộ, giữ dist cạnh app.py.
+- Trình duyệt chưa mở: tự mở URL trong terminal, không chạy thêm nhiều phiên.
+- Đóng terminal: server dừng nên phải chạy lại để xem.
+- Không tải được thời tiết: kiểm tra Internet, thử Xem dữ liệu gốc; chờ nếu API báo 429.
+- Không thấy yêu thích: cần dùng đúng trình duyệt và cùng localhost:cổng đã lưu.
+- Lỗi khi sửa frontend trong PowerShell: dùng npm.cmd thay npm.
+
+Mọi chi tiết và chú thích đã nằm trong README.md và mã nguồn đi kèm.
