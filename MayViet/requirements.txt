@@ -1,3 +1,0 @@
-# Mây Việt dùng Python 3.10 trở lên và chỉ dùng thư viện chuẩn.
-# Không cần cài Flask, requests hoặc gói pip nào để chạy: python app.py
-# Giữ toàn bộ thư mục dist đi kèm vì đó là giao diện đã biên dịch.
