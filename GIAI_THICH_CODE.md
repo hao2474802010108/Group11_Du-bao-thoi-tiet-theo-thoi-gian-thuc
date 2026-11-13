@@ -326,4 +326,298 @@ Tổng cộng có **530 chú thích có mã** trong 13 file, riêng `app.py` có
 | `APP-025` | 240 | Chủ đề sáng/tối, gắn vào `data-theme`. |
 | `APP-026` | 242 | Danh sách địa điểm đã lưu trên máy này. |
 | `APP-027` | 244 | Bộ đếm làm mới thủ công. |
-| `APP-028` | 246 | Dữ liệu 4 thẻ
+| `APP-028` | 246 | Dữ liệu 4 thẻ thành phố khám phá. |
+| `APP-029` | 248 | Lỗi riêng cho thẻ thành phố. |
+| `APP-030` | 250 | Nội dung ô tìm kiếm. |
+| `APP-031` | 252 | Danh sách gợi ý có đang mở. |
+| `APP-032` | 254 | Kết quả Geocoding + địa điểm mẫu. |
+| `APP-033` | 256 | Đang tải kết quả tìm kiếm. |
+| `APP-034` | 258 | Lỗi nguồn tìm kiếm. |
+| `APP-035` | 260 | Chỉ số gợi ý được chọn bằng bàn phím (-1 = chưa). |
+| `APP-036` | 262 | Ngày đang chọn trong 7 ngày. |
+| `APP-037` | 264 | Đang xem tổng quan hay địa điểm đã lưu. |
+| `APP-038` | 266 | Điều khiển menu trượt trên mobile. |
+| `APP-039` | 268 | Mở/đóng bảng cài đặt. |
+| `APP-040` | 270 | Mở/đóng hộp giới thiệu. |
+| `APP-041` | 272 | Toast ngắn, tự ẩn sau 3,8 giây. |
+| `APP-042` | 274 | Đang chờ trình duyệt trả vị trí. |
+| `APP-043` | 276 | Đồng hồ cập nhật mỗi phút (không gọi API). |
+| `APP-044` | 278 | Tham chiếu khung tìm kiếm. |
+| `APP-045` | 280 | Tham chiếu khung cài đặt. |
+| `APP-046` | 282 | Tham chiếu input tìm kiếm. |
+| `APP-047` | 284 | Chỉ nhận dữ liệu của địa điểm đang chọn. |
+| `APP-048` | 286 | Kiểm tra địa điểm có trong yêu thích để tô sao. |
+| `APP-049` | 289 | Khởi tạo 1 lần: đọc cài đặt/yêu thích, tạo đồng hồ 60 giây, cleanup timer. |
+| `APP-050` | 291 | Khôi phục storage nhưng vẫn validate từng giá trị. |
+| `APP-051` | 307 | Khi `unit`/`place`/`theme` đổi: cập nhật `data-theme` và lưu lại. |
+| `APP-052` | 313 | Lưu `favorites` sau khi đã khôi phục xong. |
+| `APP-053` | 317 | Đăng ký đóng bảng khi click ngoài / bấm Esc. |
+| `APP-054` | 338 | Toast 3,8 giây; thay toast hoặc rời component thì hủy timer cũ. |
+| `APP-055` | 345 | Vòng đời dự báo chính: đọc cache <3 giờ, tải mới, tự kiểm tra 15 phút khi tab hiện. |
+| `APP-056` | 349 | Khóa lưu dự báo thành công gần nhất. |
+| `APP-057` | 351 | Bản dự báo đã lưu ở giao diện (khác cache URL trong `weather-client`). |
+| `APP-097` | 363 | Mốc thành công gần nhất — quyết định có cần tải lại không. |
+| `APP-098` | 370 | Cờ chặn 2 lần load chồng nhau trong cùng effect. |
+| `APP-058` | 372 | Tải dự báo: chặn trùng, kiểm tra tuổi cache, giữ dữ liệu cũ nếu lỗi. |
+| `APP-099` | 391 | Controller trong component chỉ ngăn kết quả cũ ghi vào giao diện. |
+| `APP-100` | 410 | Lần đầu dùng cache thường; làm mới thủ công thì `force=true` nhưng vẫn tôn trọng 30 giây. |
+| `APP-101` | 414 | Timer chỉ chạy khi tab đang hiển thị. |
+| `APP-102` | 424 | Cleanup: đánh dấu vòng đời cũ kết thúc, xóa timer và listener. |
+| `APP-059` | 430 | Vòng đời thẻ thành phố: lấy 4 nơi bằng batch, 15 phút 1 lần. |
+| `APP-060` | 434 | Lấy 4 địa điểm trong 1 request. |
+| `APP-061` | 452 | Debounce tìm kiếm 350 ms. |
+| `APP-103` | 474 | 350 ms là debounce, không phải chu kỳ dự báo. |
+| `APP-062` | 482 | Gộp tìm kiếm nội bộ + API, bỏ kết quả trùng toạ độ, giữ tối đa 8 mục. |
+| `APP-063` | 502 | Hàm chọn địa điểm dùng chung cho tìm kiếm, GPS, thẻ thành phố. |
+| `APP-064` | 512 | Thêm/bỏ yêu thích, tối đa 30 mục. |
+| `APP-104` | 515 | Giới hạn 30 để danh sách gọn và localStorage nhẹ. |
+| `APP-065` | 525 | Đổi tab tổng quan/đã lưu; tab Dự báo thì cuộn đến `#weekly`. |
+| `APP-066` | 539 | Phím ↑/↓ chọn gợi ý, Enter chọn địa điểm. |
+| `APP-067` | 556 | Xin vị trí qua Geolocation khi người dùng bấm nút. |
+| `APP-105` | 565 | API định vị của trình duyệt, không phải API thời tiết. |
+| `APP-106` | 597 | Ưu tiên tiết kiệm pin: chờ tối đa 12 giây, chấp nhận vị trí cũ ≤5 phút. |
+| `APP-068` | 602 | Rút gọn đường dẫn `current`, `?.` cho phép chưa có data. |
+| `APP-069` | 604 | Nhóm dự báo theo ngày. |
+| `APP-070` | 606 | Tên tiếng Việt và nhóm minh họa từ WMO. |
+| `APP-071` | 608 | Tìm giờ chứa `current.time` để lấy UV và 24 giờ tới. |
+| `APP-072` | 617 | UV giữ giá trị thiếu, không báo 0 sai. |
+| `APP-073` | 619 | Phân mức UV: thấp, trung bình, cao, rất cao, cực cao. |
+| `APP-074` | 632 | Chọn màu theo UV. |
+| `APP-075` | 634 | Tìm giờ có xác suất mưa ≥60% trong 24 giờ tới. |
+| `APP-076` | 644 | Quy tắc nhắc: ưu tiên mưa, rồi cảm nhận ≥35°C, cuối cùng là gợi ý chung. |
+| `APP-077` | 662 | Format ngày theo tiếng Việt và giờ Việt Nam. |
+| `APP-078` | 672 | Chuẩn hóa tiến trình bình minh→hoàng hôn về 0..1. |
+| `APP-079` | 799 | Vùng nội dung chính, đích của "Đến nội dung chính". |
+| `APP-080` | 801 | Header: tiêu đề, tìm kiếm, định vị, cài đặt. |
+| `APP-081` | 824 | Combobox: kết quả mẫu hiện ngay, API đến sau. |
+| `APP-082` | 923 | Bảng °C/°F và sáng/tối. |
+| `APP-083` | 972 | Tab địa điểm và nút làm mới. |
+| `APP-084` | 1046 | Bố cục 2 cột. |
+| `APP-085` | 1053 | Tên địa điểm và nút yêu thích. |
+| `APP-086` | 1114 | Tóm tắt độ ẩm, gió, khả năng mưa. |
+| `APP-087` | 1172 | Truyền dữ liệu và ngày đã chọn xuống component giờ. |
+| `APP-088` | 1182 | Các chỉ số dùng `MetricCard`. |
+| `APP-089` | 1323 | Danh sách 7 ngày, chọn ngày thì cả chi tiết và biểu đồ đổi theo. |
+| `APP-090` | 1416 | Giờ mọc/lặn từ API; cung mặt trời chỉ minh họa. |
+| `APP-091` | 1422 | Cung SVG dùng `sunProgress`. |
+| `APP-092` | 1497 | Nội dung lời nhắc lấy từ `tip`. |
+| `APP-093` | 1522 | 4 thẻ thành phố dùng dữ liệu batch. |
+| `APP-094` | 1663 | Ghi nguồn, license và thời điểm nhận dữ liệu. |
+| `APP-095` | 1703 | Hộp giới thiệu nguồn/API/quyền riêng tư. |
+| `APP-096` | 1757 | Endpoint và liên kết JSON thật cho toạ độ đang xem. |
+
+## src/components/hourly-forecast.tsx
+
+| Mã | Dòng | Giải thích |
+|---|---:|---|
+| `HOUR-000` | 1 | Dự báo từng giờ: biểu đồ, thẻ giờ và bảng chi tiết cuộn chung. |
+| `HOUR-001` | 4 | Hook quản lý tab chỉ số, giờ chọn, vị trí cuộn, dữ liệu chuẩn hóa. |
+| `HOUR-002` | 6 | Recharts: AreaChart, trục, tooltip. |
+| `HOUR-003` | 16 | Icon minh họa và chỉ số. |
+| `HOUR-004` | 37 | `getHourlyTimeline` + formatter dùng chung. |
+| `HOUR-005` | 48 | Tiếp tục import hàm/kiểu dùng chung. |
+| `HOUR-006` | 50 | Dùng chung `forecastUrl` để link khớp địa điểm. |
+| `HOUR-007` | 53 | Chỉ số biểu đồ: nhiệt độ / mưa / gió. |
+| `HOUR-008` | 55 | Đơn vị °C hoặc °F. |
+| `HOUR-009` | 57 | Bảng icon theo nhóm thời tiết. |
+| `HOUR-010` | 69 | Mỗi mốc 72 px — dùng chung cho biểu đồ, thẻ và nút cuộn. |
+| `HOUR-011` | 71 | Chọn icon cho một giờ. |
+| `HOUR-012` | 84 | Tooltip tự tạo: giờ, ngày, GMT+7, giá trị + đơn vị. |
+| `HOUR-043` | 101 | Chưa có dữ liệu thì không render tooltip. |
+| `HOUR-013` | 129 | Nhận props, quản lý chỉ số và mốc đang chọn. |
+| `HOUR-014` | 145 | Tab chỉ số đang chọn; đổi chỉ vẽ lại, không gọi API. |
+| `HOUR-015` | 147 | Khóa mốc được bấm; `null` = chọn mốc đầu. |
+| `HOUR-016` | 149 | Cờ đầu/cuối vùng cuộn để tắt mũi tên. |
+| `HOUR-017` | 151 | Tham chiếu vùng cuộn chung. |
+| `HOUR-018` | 153 | `useMemo` chỉ tính lại khi `data` hoặc `selectedDay` đổi. |
+| `HOUR-019` | 158 | Mốc đang chọn; nếu mất thì lấy mốc đầu. |
+| `HOUR-020` | 160 | Màu theo chỉ số. |
+| `HOUR-021` | 167 | Chuyển giờ thành cấu trúc Recharts. |
+| `HOUR-022` | 180 | Đo vùng cuộn, dung sai 3 px. |
+| `HOUR-023` | 189 | Đổi địa điểm/ngày: bỏ mốc cũ, cuộn về đầu. |
+| `HOUR-024` | 195 | `ResizeObserver` đo lại khi khung đổi kích thước. |
+| `HOUR-044` | 200 | Trình duyệt không có API thì bỏ qua. |
+| `HOUR-025` | 206 | Cuộn đúng 1 bước về trái/phải. |
+| `HOUR-026` | 208 | Tôn trọng "giảm chuyển động" của OS. |
+| `HOUR-027` | 240 | 3 tab chỉ số + 2 nút cuộn. |
+| `HOUR-028` | 242 | `role=tablist`, `aria-selected` cho trình đọc màn hình. |
+| `HOUR-029` | 263 | `disabled` theo `edges` để không cuộn vượt. |
+| `HOUR-030` | 285 | Hiển thị đúng số mốc thực có. |
+| `HOUR-031` | 295 | Biểu đồ và thẻ chung vùng cuộn, phím ←/→ dùng được. |
+| `HOUR-032` | 313 | Độ rộng = số giờ ×72 + 32 px. |
+| `HOUR-033` | 323 | Biểu đồ theo khung cha; chiều cao đặt trong CSS. |
+| `HOUR-034` | 325 | Dữ liệu là `chart` đã chuẩn hóa, không lấy mẫu cách 3 giờ. |
+| `HOUR-035` | 350 | Đường nét đứt hỗ trợ đọc, không phải số liệu. |
+| `HOUR-036` | 356 | `interval=0` giữ mọi nhãn; padding mỗi bên `STEP/2`. |
+| `HOUR-037` | 366 | Trục Y 32 px; mưa cố định 0..100. |
+| `HOUR-038` | 384 | Tooltip giữ ngày và giờ VN khi qua nửa đêm. |
+| `HOUR-039` | 392 | `monotone` làm mượt; `connectNulls=false` để thiếu dữ liệu không bị nối. |
+| `HOUR-040` | 410 | Mỗi mốc 1 cột — giữ đủ 00:00, 01:00... |
+| `HOUR-041` | 455 | Nhiệt độ, mưa, gió, độ ẩm của mốc chọn; null hiện `—`. |
+| `HOUR-042` | 496 | Nút nguồn và link JSON theo đúng toạ độ. |
+
+## src/index.css
+
+| Mã | Dòng | Giải thích |
+|---|---:|---|
+| `CSS-000` | 1 | Thứ tự nạp và nơi chỉnh màu nằm trong README. |
+| `CSS-001` | 2 | Nạp Manrope từ `public/fonts`, không gọi Google Fonts. |
+| `CSS-002` | 21 | Biến thiết kế dùng chung. |
+| `CSS-003` | 36 | Bộ màu tối, bật bằng `data-theme="dark"`. |
+| `CSS-004` | 50 | `border-box` cho dễ tính kích thước. |
+| `CSS-005` | 54 | Cuộn mượt và offset khi nhảy đến mục. |
+| `CSS-006` | 59 | Font, cỡ chữ, màu nền/chữ toàn trang. |
+| `CSS-007` | 92 | Viền focus cho bàn phím. |
+| `CSS-008` | 128 | Khung ứng dụng. |
+| `CSS-009` | 132 | Link "Đến nội dung chính" chỉ hiện khi focus. |
+| `CSS-010` | 146 | Thanh điều hướng bên trái. |
+| `CSS-011` | 162 | Sắp xếp icon + chữ thương hiệu. |
+| `CSS-012` | 203 | Các nút điều hướng chính. |
+| `CSS-013` | 209 | Style nút điều hướng. |
+| `CSS-014` | 268 | Danh sách địa điểm đã lưu. |
+| `CSS-015` | 310 | Thẻ trang trí cuối thanh bên. |
+| `CSS-016` | 396 | Vùng nội dung bên phải. |
+| `CSS-017` | 402 | Hàng tiêu đề và thao tác. |
+| `CSS-018` | 452 | Khung gợi ý tìm kiếm. |
+| `CSS-019` | 458 | Ô tìm kiếm. |
+| `CSS-020` | 497 | Nút icon; `aria-label` ở JSX. |
+| `CSS-021` | 517 | Bảng nổi chọn đơn vị/chủ đề. |
+| `CSS-022` | 572 | Danh sách gợi ý tìm kiếm. |
+| `CSS-023` | 656 | Tab địa điểm và trạng thái cập nhật. |
+| `CSS-024` | 731 | Khung báo lỗi và nút thử lại. |
+| `CSS-025` | 754 | Grid 2 cột trên laptop. |
+| `CSS-026` | 767 | Style thẻ chung. |
+| `CSS-027` | 774 | Thẻ thời tiết hiện tại; ban đêm dùng `.current-night`. |
+| `CSS-028` | 857 | Số nhiệt độ lớn. |
+| `CSS-029` | 901 | Chỉ số tóm tắt. |
+| `CSS-030` | 938 | Khung minh họa CSS. |
+| `CSS-031` | 963 | Mặt trời CSS. |
+| `CSS-032` | 984 | Mặt trăng CSS. |
+| `CSS-033` | 1005 | Mây CSS. |
+| `CSS-034` | 1062 | Hạt mưa trang trí. |
+| `CSS-035` | 1123 | Màu thẻ khi `is_day=0`. |
+| `CSS-036` | 1175 | Skeleton chờ dữ liệu. |
+| `CSS-037` | 1210 | Trạng thái chưa có dữ liệu. |
+| `CSS-038` | 1257 | Khung dự báo giờ. |
+| `CSS-039` | 1269 | 3 nút đổi biểu đồ. |
+| `CSS-040` | 1296 | Tooltip biểu đồ. |
+| `CSS-041` | 1319 | Hàng thẻ giờ. |
+| `CSS-042` | 1357 | Màu icon mặc định. |
+| `CSS-043` | 1410 | Grid chỉ số nổi bật. |
+| `CSS-044` | 1494 | Thanh UV. |
+| `CSS-045` | 1545 | La bàn gió. |
+| `CSS-046` | 1573 | Thanh độ ẩm. |
+| `CSS-047` | 1640 | Khung dự báo 7 ngày. |
+| `CSS-048` | 1658 | Hàng ngày, `.selected` đánh dấu. |
+| `CSS-049` | 1739 | Mưa và gió ngày đang chọn. |
+| `CSS-050` | 1779 | Khung mọc/lặn. |
+| `CSS-051` | 1835 | Thẻ lời nhắc. |
+| `CSS-052` | 1900 | Grid thành phố gợi ý. |
+| `CSS-053` | 2013 | Hình trang trí thành phố bằng CSS. |
+| `CSS-054` | 2079 | Footer. |
+| `CSS-055` | 2160 | Grid địa điểm đã lưu. |
+| `CSS-056` | 2218 | Trạng thái chưa có địa điểm nào. |
+| `CSS-057` | 2261 | Toast. |
+| `CSS-058` | 2291 | Lớp phủ hộp giới thiệu. |
+| `CSS-059` | 2304 | Hộp giới thiệu. |
+| `CSS-060` | 2444 | Animation skeleton. |
+| `CSS-061` | 2453 | Animation icon tải. |
+| `CSS-062` | 2459 | Animation toast. |
+| `CSS-063` | 2470 | Màn hình lớn. |
+| `CSS-064` | 2539 | Màn hình rất rộng. |
+| `CSS-065` | 2547 | Laptop hẹp. |
+| `CSS-066` | 2779 | Màn hình vừa. |
+| `CSS-067` | 3003 | Tablet. |
+| `CSS-068` | 3201 | Điện thoại. |
+| `CSS-069` | 3609 | Điện thoại nhỏ. |
+| `CSS-070` | 4095 | Thông báo khi không tải được dự báo ngày. |
+| `CSS-071` | 4114 | Giảm chuyển động theo cài đặt OS. |
+
+## src/glass-update.css
+
+| Mã | Dòng | Giải thích |
+|---|---:|---|
+| `GLASS-000` | 1 | Xem README để biết thứ tự nạp và nơi chỉnh. |
+| `GLASS-001` | 3 | Biến sáng: nền pastel, thẻ bán trong suốt. |
+| `GLASS-002` | 6 | `0.76` = thẻ đục 76%. Giảm số cuối để trong hơn. |
+| `GLASS-003` | 9 | Độ đục riêng cho thanh bên. |
+| `GLASS-004` | 11 | Bảng nổi đục hơn để dễ đọc. |
+| `GLASS-005` | 15 | 3 lớp `radial-gradient` tạo vùng sáng mềm. |
+| `GLASS-006` | 33 | Biến kính mờ cho dark mode. |
+| `GLASS-007` | 64 | Lớp nền cố định, `pointer-events: none` để bấm xuyên qua. |
+| `GLASS-008` | 73 | Bo góc, viền, bóng chung. |
+| `GLASS-009` | 85 | `backdrop-filter` làm mờ nền phía sau, không mờ chữ. |
+| `GLASS-010` | 89 | Nền thanh bên riêng. |
+| `GLASS-011` | 100 | Gradient RGBA cho thẻ hiện tại. |
+| `GLASS-012` | 115 | Thẻ ban đêm đậm hơn. |
+| `GLASS-013` | 132 | Nền thẻ thành phố. |
+| `GLASS-014` | 148 | Thẻ gợi ý xanh dịu. |
+| `GLASS-015` | 174 | `min-width: 0` để khung giờ co được trong grid. |
+| `GLASS-016` | 179 | Tab chỉ số và mũi tên cùng hàng. |
+| `GLASS-017` | 191 | Nhóm mũi tên không bị co. |
+| `GLASS-018` | 212 | Nút ở đầu/cuối mờ hơn, không bấm được. |
+| `GLASS-019` | 217 | Dòng hướng dẫn cuộn và số mốc. |
+| `GLASS-020` | 241 | Chỉ vùng biểu đồ/thẻ cuộn ngang. |
+| `GLASS-021` | 244 | Hiện thanh cuộn khi 24 mốc rộng hơn. |
+| `GLASS-022` | 261 | Khung bên trong rộng = số giờ ×72 + 32. |
+| `GLASS-023` | 265 | Chiều cao biểu đồ cố định. |
+| `GLASS-024` | 270 | Grid cột do JSX truyền, padding trái 32 px. |
+| `GLASS-025` | 279 | Nút giờ: thời gian, ngày, icon, nhiệt độ, mưa. |
+| `GLASS-026` | 319 | Đánh dấu mốc đang chọn. |
+| `GLASS-027` | 333 | Khung chi tiết nằm ngoài vùng cuộn. |
+| `GLASS-028` | 372 | 4 chỉ số: nhiệt, mưa, gió, độ ẩm. |
+| `GLASS-029` | 392 | Nút nguồn + link dữ liệu gốc. |
+| `GLASS-030` | 419 | Khối API trong hộp giới thiệu, URL xuống dòng được. |
+| `GLASS-031` | 458 | Nền đặc fallback khi không có `backdrop-filter`. |
+| `GLASS-032` | 471 | Thu gọn điều khiển giờ trên màn hình vừa. |
+| `GLASS-033` | 494 | Điều chỉnh kích thước nút/chữ trên mobile. |
+| `GLASS-034` | 514 | Khoảng cách nhỏ hơn, vẫn giữ `STEP 72 px`. |
+
+## vite.config.ts
+
+| Mã | Dòng | Giải thích |
+|---|---:|---|
+| `VITE-000` | 1 | Vite phục vụ code lúc phát triển và tạo `dist` khi build. |
+| `VITE-001` | 2 | `defineConfig` cho gợi ý kiểu cấu hình. |
+| `VITE-002` | 4 | Plugin React (JSX + hot reload). |
+| `VITE-003` | 6 | Đổi alias sang path của OS. |
+| `VITE-004` | 10 | Bật React. |
+| `VITE-005` | 12 | Cho phép import `@/lib/weather`. |
+| `VITE-006` | 14 | Dev server cổng 5173 cố định, bận thì báo lỗi. |
+
+## index.html
+
+| Mã | Dòng | Giải thích |
+|---|---:|---|
+| `HTML-000` | 1 | Vỏ HTML; React render vào `#root`. |
+| `HTML-001` | 3 | `lang="vi"` cho trình đọc màn hình. |
+| `HTML-002` | 6 | UTF-8 cho tiếng Việt. |
+| `HTML-003` | 8 | Viewport cho responsive. |
+| `HTML-004` | 16 | Favicon từ `public/favicon.svg`. |
+| `HTML-005` | 18 | Manifest tên/icon. |
+| `HTML-006` | 20 | Tiêu đề tab. |
+| `HTML-007` | 24 | Chỗ React đổ giao diện vào. |
+| `HTML-008` | 26 | Vite xử lý TSX từ đây; mở qua dev server, không double-click. |
+
+## tests/weather-client.test.mjs
+
+| Mã | Dòng | Giải thích |
+|---|---:|---|
+| `TEST-API-000` | 1 | Test hồi quy; fixture chỉ dùng trong test. |
+| `TEST-API-001` | 26 | Toạ độ sai bị chặn trước khi gọi mạng. |
+| `TEST-API-002` | 41 | 5 lời gọi đồng thời chỉ tạo 1 fetch; làm mới ngay không gọi thêm. |
+| `TEST-API-003` | 59 | Phản hồi thiếu `hourly`/`daily` không được cache. |
+| `TEST-API-004` | 73 | 2 địa điểm dùng 1 request batch, giữ đúng thứ tự. |
+| `TEST-API-005` | 94 | URL mã hóa tiếng Việt đúng, lọc quốc gia khác. |
+| `TEST-API-006` | 123 | 429 áp dụng cho cả địa điểm khác cùng nguồn. |
+
+## tests/hourly-timeline.test.mjs
+
+| Mã | Dòng | Giải thích |
+|---|---:|---|
+| `TEST-HOUR-000` | 1 | Test hồi quy; dữ liệu mẫu chỉ dùng trong test. |
+| `TEST-HOUR-001` | 35 | 23:45 → "Bây giờ", 00:00, 01:00...; khóa cách nhau đúng 3.600.000 ms. |
+| `TEST-HOUR-002` | 52 | Mốc "Bây giờ" dùng số đo `current` (27,8), không thay bằng 25. |
+| `TEST-HOUR-003` | 60 | Chọn ngày mai: đủ 00:00..23:00, không có "Bây giờ". |
+| `TEST-HOUR-004` | 68 | Cuối phạm vi API chỉ có số giờ thực tế. |
+| `TEST-HOUR-005` | 77 | `null` vẫn là thiếu — không phải 0°C hay 0% mưa. |
