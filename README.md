@@ -36,18 +36,9 @@ Trong VS Code: **Ctrl+P** tìm file, **Ctrl+G** đến số dòng, **Ctrl+Shift+
 
 ### Chạy
 
-```powershell
-python --version
-python -m pip install -r requirements.txt
+python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.8.0
+python -m pip install -r requirements-ai.txt
 python app.py
-```
-
-Nếu máy Windows nhận lệnh `py` thay cho `python`, dùng:
-
-```powershell
-py -m pip install -r requirements.txt
-py app.py
-```
 
 Trình duyệt tự mở, thường tại **http://localhost:5173**. Nếu chưa mở, nhập URL được terminal in ra. Giữ terminal đang chạy; muốn dừng bấm **Ctrl+C**. Bạn cũng có thể mở `app.py` trong VS Code rồi chọn **Run Python File in Terminal**, nếu đã cài phần mở rộng Python.
 
