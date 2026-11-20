@@ -1,0 +1,173 @@
+{
+  "schema": 1,
+  "method": "RandomForestRegressor",
+  "target": "temperature_2m_next_hour",
+  "trained_at": "2026-11-11T18:52:10.423277+07:00",
+  "latitude": 10.78,
+  "longitude": 106.7,
+  "history_start": "2025-11-05T00:00",
+  "history_end": "2026-11-04T23:00",
+  "raw_rows": 8760,
+  "supervised_samples": 8735,
+  "features": 25,
+  "train_samples": 6987,
+  "test_samples": 1747,
+  "gap_samples": 1,
+  "train_start": "2025-11-06T00:00",
+  "train_end_target": "2026-08-24T03:00",
+  "test_start_anchor": "2026-08-24T04:00",
+  "test_start_target": "2026-08-24T05:00",
+  "test_end_target": "2026-11-04T23:00",
+  "metrics": {
+    "mae": 0.3467139581582185,
+    "rmse": 0.5117687823579606,
+    "r2": 0.9387072819786567
+  },
+  "baseline": {
+    "mae": 0.5455638236977676,
+    "rmse": 0.7622121572362969,
+    "r2": 0.864039409466072
+  },
+  "mae_improvement_percent": 36.448506462867726,
+  "absolute_error_p90": 0.8499997331846645,
+  "feature_importance": [
+    {
+      "name": "Chu kỳ giờ sin",
+      "value": 0.2756655115019649
+    },
+    {
+      "name": "Chu kỳ giờ cos",
+      "value": 0.1588899128606735
+    },
+    {
+      "name": "Biến thiên nhiệt độ 1 giờ",
+      "value": 0.1548523531185003
+    },
+    {
+      "name": "Độ ẩm hiện tại",
+      "value": 0.03861139994187831
+    },
+    {
+      "name": "Nhiệt độ giờ hiện tại",
+      "value": 0.0368167950340267
+    },
+    {
+      "name": "Biến thiên áp suất 3 giờ",
+      "value": 0.033019376807213376
+    },
+    {
+      "name": "Biến thiên nhiệt độ 3 giờ",
+      "value": 0.03065151556540705
+    },
+    {
+      "name": "Độ lệch chuẩn nhiệt độ 6 giờ",
+      "value": 0.02672757713169601
+    },
+    {
+      "name": "Nhiệt độ trễ 6 giờ",
+      "value": 0.024237249809356085
+    },
+    {
+      "name": "Nhiệt độ trễ 24 giờ",
+      "value": 0.02200987960150918
+    },
+    {
+      "name": "Chu kỳ năm sin",
+      "value": 0.021622106579381444
+    },
+    {
+      "name": "Chu kỳ năm cos",
+      "value": 0.020017502581159922
+    },
+    {
+      "name": "Tốc độ gió hiện tại",
+      "value": 0.0168575154857835
+    },
+    {
+      "name": "Mây che phủ hiện tại",
+      "value": 0.01649827192453813
+    },
+    {
+      "name": "Áp suất hiện tại",
+      "value": 0.013595439618477922
+    },
+    {
+      "name": "Biến thiên gió 3 giờ",
+      "value": 0.013562454826290898
+    },
+    {
+      "name": "Biến thiên độ ẩm 3 giờ",
+      "value": 0.012320235908558502
+    },
+    {
+      "name": "Nhiệt độ trễ 3 giờ",
+      "value": 0.011928172773835283
+    },
+    {
+      "name": "Trung bình nhiệt độ 24 giờ",
+      "value": 0.011435714309627188
+    },
+    {
+      "name": "Trung bình nhiệt độ 6 giờ",
+      "value": 0.011098262772124124
+    },
+    {
+      "name": "Biến thiên mây 3 giờ",
+      "value": 0.010761525257837933
+    },
+    {
+      "name": "Nhiệt độ trễ 12 giờ",
+      "value": 0.010456293388668174
+    },
+    {
+      "name": "Nhiệt độ trễ 2 giờ",
+      "value": 0.009996391654752933
+    },
+    {
+      "name": "Nhiệt độ trễ 1 giờ",
+      "value": 0.009745006025059606
+    },
+    {
+      "name": "Trung bình nhiệt độ 3 giờ",
+      "value": 0.008623535521679054
+    }
+  ],
+  "source": {
+    "provider": "Open-Meteo Historical Weather / ERA5",
+    "kind": "reanalysis_not_station_observations",
+    "url": "https://archive-api.open-meteo.com/v1/archive?latitude=10.78&longitude=106.7&start_date=2025-11-05&end_date=2026-11-04&hourly=temperature_2m%2Crelative_humidity_2m%2Csurface_pressure%2Cwind_speed_10m%2Ccloud_cover&timezone=Asia%2FHo_Chi_Minh&models=era5&temperature_unit=celsius&wind_speed_unit=kmh",
+    "downloaded_at": "2026-11-11T18:52:02.938058+07:00",
+    "start_date": "2025-11-05",
+    "end_date": "2026-11-04",
+    "latitude": 10.78,
+    "longitude": 106.7,
+    "grid_latitude": 10.75,
+    "grid_longitude": 106.75,
+    "grid_elevation": 16.0,
+    "hourly_units": {
+      "time": "iso8601",
+      "temperature_2m": "°C",
+      "relative_humidity_2m": "%",
+      "surface_pressure": "hPa",
+      "wind_speed_10m": "km/h",
+      "cloud_cover": "%"
+    },
+    "timezone": "Asia/Ho_Chi_Minh",
+    "license": "CC BY 4.0, attribution Open-Meteo and ECMWF ERA5",
+    "csv_sha256": "afeeccfd52b92346896542fcf51126f76a55e52d8aac907291974801e89ef2b7",
+    "rows": 8760
+  },
+  "parameters": {
+    "n_estimators": 160,
+    "max_depth": 14,
+    "min_samples_leaf": 3,
+    "max_features": 0.9,
+    "random_state": 42
+  },
+  "training_seconds": 6.423,
+  "sklearn_version": "1.8.0",
+  "numpy_version": "2.5.3",
+  "joblib_version": "1.6.0",
+  "note": "Kiểm thử trên ERA5 tái phân tích, không phải xác minh trực tiếp bằng trạm đo. Độ quan trọng không chứng minh quan hệ nhân quả.",
+  "artifact_sha256": "19370813635961edbf614f383b2f06740e48477cd3caaaf10b7067eade3ee8ac"
+}

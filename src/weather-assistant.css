@@ -1,0 +1,199 @@
+.weather-assistant {
+  --assistant-accent: #14637d;
+  --assistant-tint: #e4f3f8;
+  min-width: 0;
+  margin-top: 22px;
+  padding: clamp(16px, 3vw, 28px);
+  scroll-margin-top: 24px;
+}
+
+:root[data-theme="dark"] .weather-assistant {
+  --assistant-accent: #93daef;
+  --assistant-tint: #193d4f;
+}
+
+.weather-assistant-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.weather-assistant-icon {
+  display: grid;
+  flex: 0 0 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 14px;
+  color: var(--assistant-accent);
+  background: var(--assistant-tint);
+}
+
+.weather-assistant-heading h2 {
+  margin: 0;
+  font-size: 17px;
+  letter-spacing: -0.03em;
+  line-height: 1.4;
+}
+
+.weather-assistant-heading p,
+.weather-assistant-hint {
+  margin: 4px 0 0;
+  color: var(--subtle);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.weather-assistant-status {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+  padding: 5px 9px;
+  border-radius: 20px;
+  background: var(--blue-tint);
+  color: var(--subtle);
+  font-size: 11px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.weather-assistant-status[data-ready="true"] {
+  background: var(--assistant-tint);
+  color: var(--assistant-accent);
+}
+
+.weather-assistant-notice,
+.weather-assistant-answer {
+  margin: 16px 0 0;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--blue-tint);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.weather-assistant-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+}
+
+.weather-assistant-notice p { margin: 0; }
+
+.weather-assistant-form {
+  display: grid;
+  margin-top: 16px;
+  gap: 8px;
+}
+
+.weather-assistant-form label {
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.weather-assistant-form textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 76px;
+  padding: 10px 12px;
+  resize: vertical;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.weather-assistant-form textarea::placeholder { color: var(--subtle); }
+
+.weather-assistant-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+}
+
+.weather-assistant-questions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.weather-assistant-button,
+.weather-assistant-example {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--assistant-accent);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.weather-assistant-example {
+  min-height: 33px;
+  padding: 5px 9px;
+  border-radius: 18px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.weather-assistant-submit { background: var(--assistant-tint); }
+
+.weather-assistant-button:hover:enabled,
+.weather-assistant-example:hover:enabled {
+  border-color: var(--assistant-accent);
+}
+
+.weather-assistant-button:focus-visible,
+.weather-assistant-example:focus-visible,
+.weather-assistant-form textarea:focus-visible {
+  outline: 2px solid var(--assistant-accent);
+  outline-offset: 2px;
+}
+
+.weather-assistant-button:disabled,
+.weather-assistant-example:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.weather-assistant-answer { background: var(--assistant-tint); }
+
+.weather-assistant-answer h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.weather-assistant-answer p {
+  margin: 4px 0 8px;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.weather-assistant-answer small { color: var(--subtle); }
+
+@media (max-width: 520px) {
+  .weather-assistant-heading {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+  }
+
+  .weather-assistant-status {
+    grid-column: 2;
+    justify-self: start;
+    margin-left: 0;
+  }
+
+  .weather-assistant-submit { margin-left: auto; }
+}

@@ -1,0 +1,5 @@
+# Cài thêm để dùng Chronos‑2 Small và Qwen trên Python 3.12 hoặc 3.13.
+-r requirements.txt
+torch==2.8.0
+chronos-forecasting==2.3.2
+transformers==4.57.6

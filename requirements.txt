@@ -1,0 +1,8 @@
+# Random Forest, Holt–Winters và Gradient Boosting. Bản ghim khớp các mô hình TP.HCM.
+numpy==2.5.3; python_version >= "3.12"
+scipy==1.18.1; python_version >= "3.12"
+scikit-learn==1.8.0; python_version >= "3.12"
+numpy>=1.25,<3; python_version < "3.12"
+scipy>=1.11,<2; python_version < "3.12"
+scikit-learn>=1.4,<2; python_version < "3.12"
+joblib==1.6.0

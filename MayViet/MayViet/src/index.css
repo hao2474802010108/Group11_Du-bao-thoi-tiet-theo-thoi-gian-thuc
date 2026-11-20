@@ -1,0 +1,4123 @@
+/* [CSS-000] CHÚ THÍCH CSS: xem README để biết thứ tự nạp và nơi chỉnh màu/độ trong. */
+/* [CSS-001] Nạp font Manrope từ file trong public/fonts; không phải tải từ Google Fonts khi mở trang. */
+@font-face {
+  font-family: Manrope;
+  src: url("/fonts/manrope-vietnamese.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  unicode-range:
+    U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1,
+    U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329,
+    U+1EA0-1EF9, U+20AB;
+}
+@font-face {
+  font-family: Manrope;
+  src: url("/fonts/manrope-latin.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+}
+/* [CSS-002] Biến thiết kế dùng chung: nền, thẻ, chữ, đường viền, màu nhấn và bo góc. glass-update.css sẽ ghi đè một số biến. */
+:root {
+  --bg: #f5f7fb;
+  --card: #fff;
+  --text: #25334a;
+  --muted: #8893a5;
+  --subtle: #66758c;
+  --border: #edf0f5;
+  --blue: #3478ef;
+  --blue-tint: #edf4ff;
+  --chart-grid: #edf0f5;
+  --shadow: 0 4px 25px #25334a03;
+  --radius: 19px;
+  color-scheme: light;
+}
+/* [CSS-003] Bộ màu tối; được bật khi React đặt data-theme="dark" trên thẻ html. */
+:root[data-theme="dark"] {
+  --bg: #101827;
+  --card: #192334;
+  --text: #e9eef8;
+  --muted: #93a3bb;
+  --subtle: #b0bed2;
+  --border: #293449;
+  --blue: #78aaff;
+  --blue-tint: #233852;
+  --chart-grid: #2b374a;
+  --shadow: 0 4px 25px #00000010;
+  color-scheme: dark;
+}
+/* [CSS-004] Tính kích thước gồm cả padding/border, giúp grid và responsive dễ kiểm soát. */
+* {
+  box-sizing: border-box;
+}
+/* [CSS-005] Thiết lập cuộn mượt và khoảng chừa khi cuộn đến mục dự báo. */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 24px;
+}
+/* [CSS-006] Thiết lập font, cỡ chữ và màu nền/chữ toàn trang. */
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Manrope, Arial, sans-serif;
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}
+button,
+input {
+  font: inherit;
+}
+button,
+a,
+input {
+  -webkit-tap-highlight-color: transparent;
+}
+button {
+  cursor: pointer;
+  color: inherit;
+  border: 0;
+  background: none;
+}
+button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+button,
+input,
+a {
+  outline-offset: 4px;
+}
+/* [CSS-007] Viền focus hỗ trợ điều khiển bàn phím, áp dụng cho nút và liên kết. */
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--blue);
+}
+input:focus {
+  outline: none;
+}
+button {
+  transition:
+    background 0.16s,
+    color 0.16s,
+    box-shadow 0.16s,
+    transform 0.16s;
+}
+a {
+  color: inherit;
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+svg {
+  flex-shrink: 0;
+}
+button svg {
+  pointer-events: none;
+}
+::selection {
+  background: #cfe1ff;
+}
+input::placeholder {
+  color: var(--muted);
+}
+/* [CSS-008] Khung bao toàn ứng dụng; các vùng con tạo bố cục chi tiết. */
+.app-shell {
+  min-height: 100vh;
+}
+/* [CSS-009] Liên kết Đến nội dung chính chỉ hiện khi focus để bỏ qua thanh điều hướng. */
+.skip-link {
+  position: fixed;
+  top: -60px;
+  left: 260px;
+  z-index: 1000;
+  background: var(--blue);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 10px;
+}
+.skip-link:focus {
+  top: 12px;
+}
+/* [CSS-010] Thanh điều hướng bên trái; các media query phía cuối đổi thành menu cho màn hình nhỏ. */
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: 225px;
+  background: var(--card);
+  border-right: 1px solid var(--border);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  padding: 35px 20px 22px;
+}
+.brand-button {
+  text-align: left;
+  padding: 0 6px;
+}
+/* [CSS-011] Sắp xếp biểu tượng và chữ thương hiệu. */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  font-size: 25px;
+  letter-spacing: -1.1px;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 41px;
+  height: 41px;
+  color: white;
+  background: #3478ef;
+  border-radius: 13px;
+  box-shadow: 0 5px 15px #3478ef20;
+}
+.brand-light {
+  color: var(--blue);
+  font-weight: 600;
+}
+.brand small {
+  display: block;
+  font-size: 6.8px;
+  font-weight: 600;
+  letter-spacing: 1.25px;
+  color: var(--muted);
+  margin-top: 7px;
+}
+.sidebar-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.25px;
+  color: var(--muted);
+  padding: 0 11px;
+  margin: 52px 0 16px;
+}
+/* [CSS-012] Bố cục các nút điều hướng chính. */
+.main-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+/* [CSS-013] Kiểu nút điều hướng; .active và :hover đổi màu theo trạng thái. */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 46px;
+  border-radius: 11px;
+  padding: 0 13px;
+  color: var(--subtle);
+  font-size: 11.5px;
+  font-weight: 600;
+  text-align: left;
+}
+.nav-item:hover {
+  background: var(--bg);
+}
+.nav-item.active {
+  background: var(--blue-tint);
+  color: var(--blue);
+}
+.nav-dot {
+  display: none;
+  margin-left: auto;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--blue);
+}
+.active .nav-dot {
+  display: block;
+}
+.nav-count {
+  margin-left: auto;
+  min-width: 18px;
+  background: var(--blue-tint);
+  color: var(--blue);
+  font-size: 10px;
+  text-align: center;
+  border-radius: 5px;
+  padding: 2px 4px;
+}
+.sidebar-separator {
+  height: 1px;
+  background: var(--border);
+  margin: 25px 9px 0;
+}
+.sidebar-label.saved-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 24px 0 12px;
+  letter-spacing: 0.9px;
+}
+.saved-label button {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: var(--muted);
+}
+/* [CSS-014] Danh sách địa điểm đã lưu ở thanh bên. */
+.sidebar-places {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.saved-place {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px;
+  border-radius: 9px;
+  font-size: 11px;
+  text-align: left;
+  color: var(--subtle);
+}
+.saved-place span {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.saved-place.selected {
+  color: var(--blue);
+}
+.saved-place:hover {
+  background: var(--bg);
+}
+.saved-place strong {
+  font-size: 13px;
+}
+.saved-empty {
+  font-size: 11px;
+  line-height: 1.9;
+  color: var(--muted);
+  padding: 0 11px;
+  max-width: 175px;
+}
+.saved-empty svg {
+  vertical-align: -2px;
+  color: #dfb056;
+}
+/* [CSS-015] Thẻ trang trí nhỏ cuối thanh điều hướng. */
+.sidebar-bottom {
+  position: relative;
+  margin-top: auto;
+  padding: 12px 15px 17px;
+  border-radius: 16px;
+  background: #f2f7ff;
+  overflow: hidden;
+}
+.sidebar-bottom h3 {
+  font-size: 17px;
+  font-weight: 750;
+  line-height: 1.5;
+  letter-spacing: -0.6px;
+  color: #365175;
+}
+.sidebar-bottom p {
+  font-size: 10px;
+  line-height: 1.9;
+  color: #8698b1;
+  margin-top: 9px;
+}
+.sidebar-bottom button {
+  color: #5b86c3;
+  font-size: 10px;
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  margin-top: 20px;
+  padding: 0;
+}
+.little-sky {
+  height: 92px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.little-sky > svg {
+  position: relative;
+  z-index: 2;
+  filter: drop-shadow(0 5px 5px #a9bdda20);
+  margin: 19px 0 0 30px;
+}
+.little-sun {
+  position: absolute;
+  width: 46px;
+  height: 46px;
+  background: #fbd47a;
+  border-radius: 50%;
+  left: 35px;
+  top: 12px;
+  box-shadow:
+    0 0 0 9px #fbd47a14,
+    0 0 0 20px #fbd47a0d;
+}
+.sky-dot {
+  position: absolute;
+  background: #acc7f0;
+  border-radius: 50%;
+  width: 3px;
+  height: 3px;
+}
+.sky-dot.one {
+  left: 14px;
+  top: 52px;
+}
+.sky-dot.two {
+  right: 15px;
+  top: 20px;
+}
+.sidebar-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 8px;
+  color: var(--muted);
+  margin-top: 23px;
+}
+.live-dot {
+  height: 5px;
+  width: 5px;
+  border-radius: 50%;
+  background: #56b79b;
+}
+/* [CSS-016] Vùng nội dung bên phải thanh điều hướng. */
+.main-content {
+  margin-left: 225px;
+  padding: 35px 34px 19px;
+  max-width: 1665px;
+}
+/* [CSS-017] Hàng tiêu đề và các thao tác tìm kiếm/cài đặt. */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  min-height: 88px;
+  margin-bottom: 26px;
+}
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 8px;
+  letter-spacing: 1.5px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.eyebrow > span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #94afce;
+}
+.page-heading h1 {
+  font-size: 27px;
+  font-weight: 750;
+  letter-spacing: -1.1px;
+  line-height: 1.4;
+  margin-top: 7px;
+  white-space: nowrap;
+}
+.heading-sun {
+  display: inline-block;
+  font-size: 24px;
+  color: #edb74d;
+  margin-left: 13px;
+  vertical-align: 1px;
+}
+.page-heading p {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 5px;
+  text-transform: capitalize;
+}
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+/* [CSS-018] Khung định vị danh sách kết quả tìm kiếm so với input. */
+.search-wrapper {
+  position: relative;
+  z-index: 60;
+  width: 295px;
+}
+/* [CSS-019] Bề mặt và bố cục ô tìm kiếm; input nhận dữ liệu từ React state. */
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  background: var(--card);
+  height: 44px;
+  padding: 0 13px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  color: var(--muted);
+  box-shadow: var(--shadow);
+}
+.search-box.focused {
+  border-color: #8cb3f5;
+  box-shadow: 0 0 0 3px #3478ef0b;
+}
+.search-box input {
+  background: transparent;
+  border: 0;
+  min-width: 0;
+  width: 100%;
+  font-size: 11px;
+  color: var(--text);
+  height: 100%;
+}
+.search-box > button {
+  padding: 0;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}
+.search-key {
+  font-size: 8px;
+  border: 1px solid var(--border);
+  padding: 3px 4px;
+  border-radius: 4px;
+  letter-spacing: 0.4px;
+}
+/* [CSS-020] Nút chỉ có icon; aria-label được khai báo ở JSX để mô tả chức năng. */
+.icon-button {
+  width: 43px;
+  height: 43px;
+  display: grid;
+  place-items: center;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  color: var(--subtle);
+}
+.icon-button:hover,
+.icon-button.selected {
+  background: var(--blue-tint);
+  color: var(--blue);
+}
+.settings-wrapper {
+  position: relative;
+  z-index: 65;
+}
+/* [CSS-021] Bảng nổi chọn đơn vị và giao diện, dùng z-index để nằm trên nội dung. */
+.settings-popover {
+  position: absolute;
+  right: 0;
+  top: 54px;
+  width: 252px;
+  border: 1px solid var(--border);
+  box-shadow: 0 12px 40px #14294d18;
+  border-radius: 15px;
+  background: var(--card);
+  padding: 20px;
+  z-index: 80;
+}
+.settings-popover h3 {
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+.settings-popover label {
+  display: block;
+  color: var(--subtle);
+  font-size: 10px;
+  margin: 16px 0 9px;
+}
+.segmented {
+  display: flex;
+  gap: 5px;
+  padding: 4px;
+  background: var(--bg);
+  border-radius: 8px;
+}
+.segmented button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 3px;
+  border-radius: 5px;
+  font-size: 11px;
+  color: var(--subtle);
+}
+.segmented button.active {
+  background: var(--card);
+  box-shadow: 0 2px 5px #20334f0a;
+  color: var(--blue);
+}
+.settings-popover p {
+  font-size: 8px;
+  color: var(--muted);
+  margin-top: 18px;
+  line-height: 1.6;
+}
+.mobile-brand {
+  display: none;
+}
+/* [CSS-022] Danh sách gợi ý nổi bên dưới ô tìm kiếm. */
+.search-results {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 52px;
+  padding: 9px;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  background: var(--card);
+  box-shadow: 0 16px 50px #1e355d21;
+  min-width: 285px;
+  z-index: 70;
+}
+.search-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 8px;
+  letter-spacing: 0.9px;
+  color: var(--muted);
+  padding: 9px 9px 11px;
+  font-weight: 650;
+}
+.search-result {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  text-align: left;
+  padding: 10px 8px;
+  border-radius: 9px;
+}
+.search-result:hover,
+.search-result.highlighted {
+  background: var(--blue-tint);
+}
+.result-pin {
+  display: grid;
+  place-items: center;
+  width: 33px;
+  height: 33px;
+  border-radius: 9px;
+  background: var(--bg);
+  color: var(--blue);
+}
+.search-result > span:nth-child(2) {
+  flex: 1;
+}
+.search-result strong {
+  display: block;
+  font-size: 11px;
+  font-weight: 650;
+}
+.search-result small {
+  display: block;
+  font-size: 9px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+.search-result > svg {
+  color: var(--muted);
+}
+.search-footer {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 8px;
+  color: var(--muted);
+  margin: 7px 6px 0;
+  padding: 11px 0 3px;
+  border-top: 1px solid var(--border);
+}
+.search-empty,
+.search-note {
+  font-size: 10px;
+  color: var(--subtle);
+  line-height: 1.8;
+  padding: 16px 9px;
+}
+.search-note {
+  font-size: 9px;
+  padding: 8px;
+}
+/* [CSS-023] Tab địa điểm và trạng thái cập nhật dữ liệu. */
+.location-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 22px;
+}
+.location-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.location-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--subtle);
+  padding: 10px 14px;
+  border-radius: 9px;
+  white-space: nowrap;
+}
+.location-tab:hover {
+  background: var(--card);
+}
+.location-tab.active {
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--blue);
+  box-shadow: 0 3px 10px #1c35550a;
+}
+.add-location {
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  width: 29px;
+  height: 32px;
+  border: 1px dashed #d6deea;
+  border-radius: 8px;
+  margin-left: 2px;
+}
+.add-location:hover {
+  color: var(--blue);
+  border-color: var(--blue);
+}
+.update-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 8px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.status-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #59bda2;
+}
+.status-dot.stale-dot {
+  background: #e3a34d;
+}
+.refresh-button {
+  padding: 5px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  margin-left: 1px;
+}
+.refresh-button:hover {
+  color: var(--blue);
+}
+/* [CSS-024] Khung thông báo lỗi mạng/nguồn dữ liệu với nút thử lại. */
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: #fff7e9;
+  border: 1px solid #f4e1bd;
+  border-radius: 12px;
+  color: #996d2a;
+  font-size: 11px;
+  line-height: 1.8;
+  margin-bottom: 20px;
+}
+.error-banner span {
+  flex: 1;
+}
+.error-banner button {
+  border: 1px solid #e9ca90;
+  padding: 6px 12px;
+  border-radius: 7px;
+  white-space: nowrap;
+}
+/* [CSS-025] Grid bố cục chính hai cột trên laptop rộng; responsive ở cuối file thay đổi theo màn hình. */
+.primary-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 302px;
+  gap: 23px;
+  align-items: start;
+}
+.weather-main,
+.weather-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 23px;
+}
+/* [CSS-026] Kiểu thẻ chung. File glass-update.css thay nền/viền/bóng để có độ trong nhẹ. */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+/* [CSS-027] Thẻ thời tiết hiện tại với nền chuyển màu; phiên bản ban đêm dùng .current-night. */
+.current-card {
+  position: relative;
+  isolation: isolate;
+  border-radius: 20px;
+  overflow: hidden;
+  background: linear-gradient(112deg, #e8f2ff 0%, #e0eeff 50%, #d8e9fd 100%);
+  color: #28476e;
+  padding: 25px 28px 0;
+  min-height: 291px;
+  border: 1px solid #dceafa;
+}
+.current-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  position: relative;
+  z-index: 3;
+}
+.current-location {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.current-location > svg {
+  color: #487aaf;
+}
+.current-location h2 {
+  font-size: 20px;
+  font-weight: 750;
+  letter-spacing: -0.65px;
+  max-width: 270px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.country-label {
+  font-size: 6px;
+  letter-spacing: 1.2px;
+  border: 1px solid #99b9df73;
+  border-radius: 4px;
+  padding: 4px 5px;
+  margin-left: 2px;
+  color: #668db9;
+  font-weight: 700;
+}
+.current-top p {
+  font-size: 9px;
+  color: #7293ba;
+  margin: 7px 0 0 28px;
+}
+.current-top p > span {
+  padding: 0 4px;
+}
+.favorite-button {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  background: #ffffff6b;
+  color: #779bc6;
+  border: 1px solid #ffffff94;
+}
+.favorite-button:hover {
+  background: #fff;
+}
+.favorite-button.is-saved {
+  color: #e6ad38;
+  background: #fff8e9;
+}
+.current-body {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  z-index: 2;
+  min-height: 171px;
+}
+.current-reading {
+  padding-top: 12px;
+  position: relative;
+  z-index: 3;
+}
+/* [CSS-028] Kiểu chữ số nhiệt độ lớn; đơn vị có kiểu nhỏ riêng. */
+.current-temperature {
+  font-size: 80px;
+  font-weight: 550;
+  line-height: 1.15;
+  letter-spacing: -5px;
+  display: flex;
+  align-items: flex-start;
+  color: #294c79;
+}
+.current-temperature > span {
+  font-size: 19px;
+  letter-spacing: -0.7px;
+  margin: 15px 0 0 4px;
+  font-weight: 500;
+  color: #6589b4;
+}
+.current-description {
+  font-size: 13px;
+  font-weight: 650;
+  margin-top: 2px;
+  letter-spacing: -0.2px;
+}
+.current-range {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 9px;
+  color: #698bb3;
+  margin-top: 12px;
+}
+.current-range > span {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.current-range > span:first-child {
+  color: #426c9d;
+}
+.current-range > .feels-label {
+  border-left: 1px solid #abc4e170;
+  padding-left: 12px;
+  font-size: 9px;
+}
+/* [CSS-029] Các chỉ số tóm tắt bên dưới nhiệt độ. */
+.current-stats {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid #aec8e440;
+  min-height: 53px;
+  margin-top: 5px;
+}
+.current-stats > div {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #7393b7;
+}
+.current-stats span {
+  font-size: 9px;
+}
+.current-stats strong {
+  color: #466a96;
+  font-weight: 700;
+  margin-left: 5px;
+}
+.city-silhouette {
+  position: absolute;
+  bottom: 38px;
+  right: 0;
+  width: 75%;
+  height: 91px;
+  fill: #8ab5e1;
+  opacity: 0.12;
+  z-index: 0;
+  pointer-events: none;
+}
+/* [CSS-030] Khung minh họa CSS; các lớp scene-sun/cloud/rain tạo hình bằng màu, bóng và phần tử giả. */
+.weather-scene {
+  position: absolute;
+  width: 245px;
+  height: 190px;
+  right: -2px;
+  top: -10px;
+  pointer-events: none;
+}
+.scene-orbit {
+  position: absolute;
+  border: 1px solid #fff7;
+  border-radius: 50%;
+  width: 200px;
+  height: 200px;
+  right: 3px;
+  top: -19px;
+}
+.orbit-two {
+  width: 262px;
+  height: 262px;
+  right: -28px;
+  top: -50px;
+  border-color: #ffffff3b;
+}
+/* [CSS-031] Hình mặt trời bằng CSS, không cần tải ảnh bên ngoài. */
+.scene-sun {
+  position: absolute;
+  right: 44px;
+  top: 16px;
+  width: 101px;
+  height: 101px;
+  background: linear-gradient(135deg, #ffe8a1, #ffce65);
+  border-radius: 50%;
+  box-shadow:
+    0 0 42px #ffda7450,
+    inset -4px -6px 15px #f1b84640,
+    inset 3px 4px 14px #fff3c9;
+}
+.scene-sun:before {
+  content: "";
+  position: absolute;
+  inset: -13px;
+  border: 1px solid #f7cd6c35;
+  border-radius: 50%;
+}
+/* [CSS-032] Hình mặt trăng bằng CSS. */
+.scene-moon {
+  position: absolute;
+  right: 58px;
+  top: 21px;
+  width: 83px;
+  height: 83px;
+  background: #f6e2a3;
+  border-radius: 50%;
+  box-shadow: 0 0 40px #f4de9630;
+}
+.scene-moon:after {
+  content: "";
+  position: absolute;
+  background: #28476b;
+  width: 73px;
+  height: 73px;
+  top: -14px;
+  right: -15px;
+  border-radius: 50%;
+}
+/* [CSS-033] Hình mây; ::before/::after và các lớp trước/sau thêm các khối tròn. */
+.scene-cloud {
+  position: absolute;
+  background: #f4f8fd;
+  border-radius: 40px;
+  box-shadow:
+    0 13px 20px #6d98c82b,
+    inset 0 -8px 8px #c4d8ee72;
+}
+.scene-cloud:before,
+.scene-cloud:after {
+  content: "";
+  position: absolute;
+  background: inherit;
+  border-radius: 50%;
+  z-index: -1;
+}
+.cloud-back {
+  width: 130px;
+  height: 43px;
+  right: 6px;
+  top: 99px;
+  background: #c9dcee;
+  box-shadow: 0 10px 18px #6c90b815;
+}
+.cloud-back:before {
+  width: 55px;
+  height: 55px;
+  top: -30px;
+  left: 19px;
+}
+.cloud-back:after {
+  width: 43px;
+  height: 43px;
+  top: -22px;
+  right: 12px;
+}
+.cloud-front {
+  width: 157px;
+  height: 54px;
+  right: 49px;
+  top: 106px;
+  background: #f5f9fe;
+  z-index: 2;
+}
+.cloud-front:before {
+  width: 75px;
+  height: 75px;
+  left: 25px;
+  top: -42px;
+}
+.cloud-front:after {
+  width: 56px;
+  height: 56px;
+  right: 16px;
+  top: -28px;
+}
+/* [CSS-034] Những nét mưa trang trí chỉ xuất hiện khi mã thời tiết thuộc nhóm mưa. */
+.scene-rain {
+  position: absolute;
+  left: 65px;
+  right: 38px;
+  bottom: 4px;
+  display: flex;
+  justify-content: space-around;
+  z-index: 3;
+}
+.scene-rain i {
+  display: block;
+  width: 3px;
+  height: 14px;
+  background: #76a9df;
+  border-radius: 3px;
+  transform: rotate(20deg);
+}
+.scene-rain i:nth-child(even) {
+  margin-top: 7px;
+}
+.scene-lightning {
+  position: absolute;
+  width: 24px;
+  height: 43px;
+  right: 90px;
+  bottom: -6px;
+  background: #f6cd63;
+  clip-path: polygon(40% 0, 100% 0, 65% 40%, 100% 40%, 0 100%, 34% 52%, 0 52%);
+  z-index: 4;
+}
+.scene-rain ~ .scene-spark {
+  display: none;
+}
+.scene-spark {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #85afd5;
+  border-radius: 50%;
+  opacity: 0.55;
+}
+.spark-one {
+  right: 23px;
+  top: 63px;
+}
+.spark-two {
+  left: 15px;
+  top: 92px;
+  width: 3px;
+  height: 3px;
+}
+.spark-three {
+  right: 51px;
+  bottom: 0;
+  width: 3px;
+  height: 3px;
+}
+.scene-kind-fog .scene-cloud {
+  opacity: 0.6;
+}
+/* [CSS-035] Bảng màu thẻ hiện tại khi API cho is_day = 0. */
+.current-night {
+  background: linear-gradient(115deg, #253c5e, #294d75);
+  border-color: #2b4c74;
+  color: #e6effa;
+}
+.current-night .current-temperature {
+  color: #f0f6ff;
+}
+.current-night .current-temperature > span {
+  color: #a4bfdc;
+}
+.current-night .current-top p,
+.current-night .current-range,
+.current-night .current-stats > div {
+  color: #b2c7df;
+}
+.current-night .current-stats strong,
+.current-night .current-range > span:first-child {
+  color: #e1edfa;
+}
+.current-night .country-label {
+  color: #afc6e1;
+}
+.current-night .favorite-button {
+  background: #ffffff15;
+  color: #b8cde8;
+  border-color: #ffffff25;
+}
+.current-night .favorite-button.is-saved {
+  color: #f7d784;
+}
+.current-night .scene-orbit {
+  border-color: #ffffff0b;
+}
+.current-night .scene-cloud {
+  background: #dae5f0;
+}
+.current-night .cloud-back {
+  background: #b6cbe1;
+}
+.current-night .scene-moon:after {
+  background: #29496f;
+}
+.current-night .scene-sun {
+  opacity: 0.6;
+}
+.current-loading {
+  position: relative;
+  height: 223px;
+  padding-top: 27px;
+}
+/* [CSS-036] Khung chờ có chuyển động nhẹ trong lúc dữ liệu đang tải; không chứa số liệu giả. */
+.skeleton {
+  background: linear-gradient(90deg, var(--border), var(--bg), var(--border));
+  background-size: 200% 100%;
+  border-radius: 6px;
+  animation: shimmer 1.7s infinite;
+}
+.current-loading .skeleton {
+  background: linear-gradient(90deg, #d4e5fa, #e2eeff, #d4e5fa);
+  background-size: 200% 100%;
+}
+.temperature-skeleton {
+  width: 110px;
+  height: 68px;
+}
+.line-skeleton {
+  width: 99px;
+  height: 12px;
+  margin-top: 19px;
+}
+.line-skeleton.short {
+  width: 150px;
+  height: 8px;
+  margin-top: 12px;
+}
+.loading-orb {
+  position: absolute;
+  right: 60px;
+  top: 35px;
+  width: 95px;
+  height: 95px;
+  background: #f7d99970;
+  border-radius: 50%;
+  box-shadow: 0 0 0 15px #f7d99910;
+}
+/* [CSS-037] Trạng thái chưa có dữ liệu và nút tải lại. */
+.current-unavailable {
+  position: relative;
+  z-index: 4;
+  text-align: center;
+  padding: 16px 0 25px;
+  color: #6688af;
+}
+.current-unavailable > svg {
+  margin-bottom: 10px;
+}
+.current-unavailable h3 {
+  font-size: 14px;
+}
+.current-unavailable p {
+  font-size: 10px;
+  margin: 6px 0 14px;
+}
+.current-unavailable button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 15px;
+  border-radius: 8px;
+  background: #fff9;
+  color: #436d9f;
+  font-size: 10px;
+}
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.section-heading h2 {
+  font-size: 14px;
+  font-weight: 750;
+  letter-spacing: -0.25px;
+}
+.section-heading p {
+  color: var(--muted);
+  font-size: 9px;
+  margin-top: 5px;
+}
+.section-heading > svg {
+  color: var(--muted);
+}
+/* [CSS-038] Khung dự báo theo giờ; phần bố cục cuộn mới được ghi đè trong glass-update.css. */
+.hourly-section {
+  padding: 23px 23px 17px;
+  overflow: hidden;
+}
+.hourly-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 8px;
+}
+/* [CSS-039] Ba nút chuyển biểu đồ nhiệt độ/mưa/gió. */
+.chart-tabs {
+  display: flex;
+  gap: 5px;
+  margin-top: 18px;
+}
+.chart-tabs button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  font-size: 9px;
+  color: var(--muted);
+  border-radius: 7px;
+  font-weight: 600;
+}
+.chart-tabs button.active {
+  background: #fff7e8;
+  color: #b88a34;
+}
+.chart-tabs button:hover:not(.active) {
+  background: var(--bg);
+}
+.weather-chart {
+  height: 141px;
+  margin: 5px -5px 17px;
+}
+/* [CSS-040] Khung nổi hiển thị giá trị khi rê chuột trên biểu đồ. */
+.chart-tooltip {
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 4px 20px #14244012;
+  gap: 4px;
+}
+.chart-tooltip small {
+  font-size: 9px;
+  color: var(--muted);
+}
+.chart-tooltip strong {
+  font-size: 18px;
+  font-weight: 750;
+}
+.chart-tooltip span {
+  font-size: 9px;
+  color: var(--subtle);
+}
+/* [CSS-041] Kiểu hàng thẻ giờ nền tảng; glass-update.css đổi sang số cột động để giữ đủ từng giờ. */
+.hourly-cards {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 4px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+.hour-item {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 9px;
+  padding: 8px 1px 7px;
+  border-radius: 10px;
+}
+.hour-item > span {
+  color: var(--muted);
+  font-size: 8px;
+}
+.hour-item > strong {
+  font-size: 13px;
+  letter-spacing: -0.3px;
+}
+.hour-item > small {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  color: #7fa6d3;
+  font-size: 8px;
+}
+.hour-item.hour-now {
+  background: var(--blue-tint);
+}
+.hour-now > span,
+.hour-now > strong {
+  color: var(--blue);
+}
+/* [CSS-042] Màu mặc định của icon; các lớp weather-rain/moon/... đổi theo nhóm thời tiết. */
+.weather-icon {
+  color: #a6b6c8;
+}
+.weather-sun,
+.weather-partly {
+  color: #e9b34d;
+  fill: #ffe6a038;
+}
+.weather-moon {
+  color: #d5b460;
+  fill: #f1d47b18;
+}
+.weather-rain,
+.weather-drizzle,
+.weather-storm {
+  color: #7a9bc0;
+  fill: #bad1e62b;
+}
+.weather-cloud {
+  color: #a2b5ca;
+  fill: #c8d8e729;
+}
+.weather-snow {
+  color: #89bbd3;
+}
+.chart-placeholder {
+  height: 257px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-direction: column;
+  color: var(--muted);
+  font-size: 10px;
+}
+.chart-skeleton {
+  width: 100%;
+  height: 125px;
+  opacity: 0.7;
+  border-radius: 12px;
+}
+.chart-placeholder > span {
+  margin-top: 10px;
+}
+.highlights-section > .section-heading {
+  margin: 1px 0 17px;
+}
+.section-caption {
+  font-size: 9px;
+  color: var(--muted);
+}
+/* [CSS-043] Grid các chỉ số nổi bật: UV, gió, độ ẩm, tầm nhìn, mây và áp suất. */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 13px;
+}
+.metric-card {
+  padding: 18px 17px 14px;
+  min-height: 158px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 15px;
+}
+.metric-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+}
+.metric-title > svg {
+  color: #95a6bd;
+  stroke-width: 1.6;
+}
+.metric-title h3 {
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.metric-value {
+  font-size: 28px;
+  letter-spacing: -1.3px;
+  font-weight: 650;
+  margin-top: 15px;
+  line-height: 1.1;
+}
+.metric-value > span {
+  font-size: 11px;
+  letter-spacing: 0;
+  font-weight: 500;
+  color: var(--muted);
+  margin-left: 5px;
+}
+.metric-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  font-size: 8px;
+  color: var(--subtle);
+  margin-top: 13px;
+  line-height: 1.7;
+}
+.metric-note > span:not(.small-tag) {
+  color: var(--muted);
+  font-size: 7px;
+}
+.metric-note strong {
+  font-weight: 600;
+}
+.metric-note.two-line {
+  flex-direction: column;
+  align-items: flex-start;
+  margin-top: 18px;
+  gap: 1px;
+  min-height: 28px;
+}
+.small-tag {
+  font-size: 7px;
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-weight: 600;
+}
+.tag-green {
+  background: #e7f5ed;
+  color: #58a17b;
+}
+.tag-amber {
+  background: #fff4d9;
+  color: #bd9844;
+}
+.tag-orange {
+  background: #fff0e5;
+  color: #d3884b;
+}
+/* [CSS-044] Thanh màu UV; vị trí con trỏ do dữ liệu trong JSX quyết định. */
+.uv-meter {
+  display: flex;
+  gap: 3px;
+  position: relative;
+  margin-top: 15px;
+  height: 5px;
+}
+.uv-meter > span {
+  flex: 1;
+  border-radius: 3px;
+  background: #8ec6ae;
+}
+.uv-meter > span:nth-child(2) {
+  background: #ecdb7a;
+}
+.uv-meter > span:nth-child(3) {
+  background: #eebc7d;
+}
+.uv-meter > span:nth-child(4) {
+  background: #df9696;
+}
+.uv-meter > span:nth-child(5) {
+  background: #b89abf;
+}
+.uv-meter i {
+  position: absolute;
+  width: 4px;
+  height: 9px;
+  top: -2px;
+  border: 1px solid var(--card);
+  background: #66758c;
+  border-radius: 2px;
+  transform: translateX(-50%);
+}
+.wind-card .metric-value {
+  max-width: 110px;
+  font-size: 26px;
+  position: relative;
+  z-index: 2;
+}
+.wind-card .metric-value > span {
+  font-size: 9px;
+}
+.wind-card .metric-note {
+  margin-top: 30px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  font-size: 7px;
+  gap: 3px;
+}
+/* [CSS-045] La bàn gió trang trí; hướng chữ và phép quay nằm trong JSX. */
+.wind-compass {
+  position: absolute;
+  width: 52px;
+  height: 52px;
+  border: 1px dashed #bfcedf;
+  border-radius: 50%;
+  top: 43px;
+  right: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #70a1cb;
+}
+.wind-compass > span {
+  position: absolute;
+  top: -10px;
+  left: 23px;
+  color: var(--muted);
+  font-size: 6px;
+  background: var(--card);
+  padding: 2px;
+}
+.wind-compass > span:last-child {
+  bottom: -9px;
+  top: auto;
+  left: 22px;
+}
+/* [CSS-046] Thanh tỉ lệ độ ẩm; độ rộng được truyền từ dữ liệu %. */
+.humidity-meter {
+  height: 5px;
+  border-radius: 4px;
+  background: #ebf3fc;
+  margin-top: 15px;
+  overflow: hidden;
+}
+.humidity-meter > i {
+  height: 100%;
+  display: block;
+  border-radius: 5px;
+  background: linear-gradient(90deg, #c8def4, #72a6d8);
+}
+.humidity-meter ~ .metric-note > span {
+  font-size: 8px;
+}
+.visibility-lines {
+  position: absolute;
+  right: 17px;
+  top: 58px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  opacity: 0.6;
+}
+.visibility-lines > i {
+  width: 36px;
+  height: 3px;
+  background: #bbcadb;
+  border-radius: 4px;
+}
+.visibility-lines > i:nth-child(2) {
+  width: 28px;
+}
+.visibility-lines > i:nth-child(3) {
+  width: 20px;
+}
+.visibility-lines + .metric-note {
+  flex-direction: column;
+  align-items: flex-start;
+  margin-top: 18px;
+  gap: 0;
+}
+.cloud-cover-visual {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #b2c8df;
+  margin-top: 8px;
+  height: 12px;
+}
+.cloud-cover-visual > svg {
+  position: absolute;
+  right: 15px;
+  top: 57px;
+  fill: #dce8f526;
+  stroke-width: 1.5;
+}
+.cloud-cover-visual > span {
+  font-size: 7px;
+  color: var(--muted);
+}
+.cloud-cover-visual + .metric-note {
+  margin-top: 4px;
+}
+/* [CSS-047] Khung dự báo 7 ngày bên phải. */
+.weekly-section {
+  padding: 23px 17px 17px;
+  scroll-margin-top: 22px;
+}
+.weekly-section .section-heading {
+  padding: 0 5px;
+}
+.weekly-subtitle {
+  font-size: 8px;
+  color: var(--muted);
+  margin: 7px 5px 13px;
+}
+.weekly-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+/* [CSS-048] Mỗi hàng là một ngày; lớp selected đánh dấu ngày đang xem chi tiết. */
+.day-row {
+  display: grid;
+  grid-template-columns: 1fr 39px 69px 9px;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 11px 9px;
+  min-height: 63px;
+  border-radius: 10px;
+  text-align: left;
+}
+.day-row:hover {
+  background: var(--bg);
+}
+.day-row.selected {
+  background: var(--blue-tint);
+}
+.day-name {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.day-name > strong {
+  font-size: 10px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.day-name > small {
+  font-size: 7px;
+  color: var(--muted);
+}
+.day-weather {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 3px;
+}
+.day-weather > small {
+  font-size: 7px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  color: #8ca9c8;
+}
+.day-temperatures {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  letter-spacing: -0.3px;
+}
+.day-temperatures > strong {
+  font-weight: 650;
+}
+.day-temperatures > span {
+  color: #a5afbd;
+  font-size: 10px;
+}
+.day-row > svg {
+  color: #bac4d2;
+}
+.day-row.selected .day-name strong,
+.day-row.selected > svg {
+  color: var(--blue);
+}
+.day-skeleton {
+  pointer-events: none;
+  grid-template-columns: 1fr 28px 55px;
+}
+.day-skeleton .skeleton {
+  height: 11px;
+}
+.day-skeleton .skeleton:first-child {
+  width: 57px;
+}
+.day-skeleton .skeleton:nth-child(2) {
+  height: 20px;
+  width: 25px;
+}
+/* [CSS-049] Mưa và gió của ngày đang chọn. */
+.selected-day-detail {
+  margin: 13px 6px 0;
+  padding-top: 13px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.selected-day-detail > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.selected-day-detail span {
+  font-size: 8px;
+  color: var(--muted);
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+.selected-day-detail strong {
+  font-size: 8px;
+  font-weight: 650;
+  color: var(--subtle);
+}
+.forecast-footnote {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 13px 6px 0;
+  color: var(--muted);
+  font-size: 7px;
+  line-height: 1.7;
+}
+.forecast-footnote > svg {
+  margin-top: 1px;
+  width: 11px;
+  height: 11px;
+}
+/* [CSS-050] Khung giờ bình minh và hoàng hôn. */
+.sun-section {
+  padding: 22px 22px 20px;
+}
+.sun-section .section-heading h2 {
+  font-size: 12px;
+}
+.sun-section .section-heading > svg {
+  color: #e1b34e;
+}
+.sun-arc {
+  position: relative;
+  height: 96px;
+  margin: 11px -2px -3px;
+}
+.sun-arc > svg {
+  height: 100%;
+  width: 100%;
+  display: block;
+}
+.sun-middle {
+  position: absolute;
+  top: 52px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 8px;
+  color: var(--muted);
+}
+.sun-times {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 7px;
+}
+.sun-times > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #d8aa56;
+}
+.sun-times > div:last-child {
+  color: #93a6be;
+}
+.sun-times span {
+  font-size: 7px;
+  color: var(--muted);
+}
+.sun-times strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  color: var(--text);
+  margin-top: 4px;
+}
+/* [CSS-051] Thẻ lời nhắc hằng ngày, nội dung được tạo bằng quy tắc trong weather-app.tsx. */
+.tip-card {
+  padding: 23px;
+  border-radius: 18px;
+  background: #edf4ee;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #e4eee6;
+}
+.tip-icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  background: #ffffff94;
+  color: #76a187;
+  border-radius: 11px;
+  margin-bottom: 15px;
+}
+.tip-card .eyebrow {
+  font-size: 6px;
+  color: #8aaa95;
+  letter-spacing: 1.2px;
+}
+.tip-card h3 {
+  font-size: 14px;
+  letter-spacing: -0.3px;
+  font-weight: 700;
+  margin-top: 9px;
+  color: #537963;
+}
+.tip-card p {
+  font-size: 9px;
+  line-height: 1.9;
+  color: #7c9786;
+  margin-top: 9px;
+  max-width: 235px;
+}
+.tip-footer {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 7px;
+  color: #92aa99;
+  border-top: 1px solid #d9e6dd;
+  margin-top: 18px;
+  padding-top: 13px;
+}
+.explore-section {
+  margin-top: 32px;
+}
+.explore-section .section-heading {
+  margin-bottom: 18px;
+}
+.text-button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 9px;
+  color: var(--blue);
+  padding: 5px 0;
+}
+.text-button:hover {
+  color: #235bb5;
+}
+/* [CSS-052] Grid các thành phố gợi ý; số liệu đến từ request batch. */
+.city-cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 15px;
+}
+.city-card {
+  position: relative;
+  text-align: left;
+  border: 1px solid #e8ecf4;
+  background: #eef4fc;
+  border-radius: 14px;
+  overflow: hidden;
+  padding: 17px 17px 24px;
+  isolation: isolate;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+.city-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 22px #1a3d6810;
+}
+.city-card.city-selected {
+  border-color: #9cbcec;
+}
+.city-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #94a6bd;
+  position: relative;
+  z-index: 2;
+}
+.city-card-top > span {
+  font-size: 7px;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+}
+.city-card-top > svg {
+  transform: rotate(45deg);
+  width: 12px;
+  height: 12px;
+}
+.city-card-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 19px;
+  position: relative;
+  z-index: 2;
+}
+.city-card-main > div {
+  flex: 1;
+  min-width: 0;
+}
+.city-card-main h3 {
+  font-size: 14px;
+  letter-spacing: -0.4px;
+  font-weight: 700;
+  color: #486487;
+}
+.city-card-main p {
+  font-size: 8px;
+  color: #8ba0ba;
+  margin-top: 5px;
+}
+.city-card-main > strong {
+  font-size: 27px;
+  letter-spacing: -1px;
+  font-weight: 600;
+  color: #486487;
+}
+.city-card-main > .weather-icon {
+  width: 28px;
+  height: 28px;
+}
+.city-1 {
+  background: #f1f0fa;
+  border-color: #e9e8f2;
+}
+.city-1 .city-card-main h3,
+.city-1 .city-card-main > strong {
+  color: #736c94;
+}
+.city-1 .city-card-main p,
+.city-1 .city-card-top {
+  color: #a39bbb;
+}
+.city-2 {
+  background: #eef8f7;
+  border-color: #e2efed;
+}
+.city-2 .city-card-main h3,
+.city-2 .city-card-main > strong {
+  color: #5c8a87;
+}
+.city-2 .city-card-main p,
+.city-2 .city-card-top {
+  color: #94b7b3;
+}
+.city-3 {
+  background: #f4f6eb;
+  border-color: #e9ecdf;
+}
+.city-3 .city-card-main h3,
+.city-3 .city-card-main > strong {
+  color: #7e8a5d;
+}
+.city-3 .city-card-main p,
+.city-3 .city-card-top {
+  color: #a4af8d;
+}
+/* [CSS-053] Hình trang trí từng thành phố bằng CSS, không phải bản đồ hoặc ảnh đo đạc. */
+.city-art {
+  position: absolute;
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  height: 80px;
+  right: -10px;
+  left: 20px;
+  bottom: 0;
+  opacity: 0.07;
+  z-index: 0;
+}
+.city-art > i {
+  width: 14%;
+  height: 43%;
+  background: #7396bd;
+  border-radius: 1px;
+}
+.city-art > i:nth-child(2) {
+  height: 57%;
+}
+.city-art > i:nth-child(3) {
+  height: 70%;
+  width: 10%;
+  clip-path: polygon(50% 0, 100% 20%, 100% 100%, 0 100%, 0 20%);
+}
+.city-art > i:nth-child(4) {
+  height: 33%;
+}
+.city-art > i:nth-child(5) {
+  height: 55%;
+}
+.city-art > i:nth-child(6) {
+  height: 40%;
+}
+.city-art > i:nth-child(7) {
+  height: 62%;
+}
+.city-1 .city-art > i {
+  background: #9384bc;
+}
+.city-2 .city-art {
+  transform: skewY(-5deg);
+  bottom: -10px;
+}
+.city-2 .city-art > i {
+  background: #429791;
+}
+.city-3 .city-art {
+  left: -10px;
+  gap: 0;
+  bottom: -10px;
+}
+.city-3 .city-art > i {
+  background: #758c4a;
+  border-radius: 50% 50% 0 0;
+  width: 60%;
+  height: 70%;
+  flex-shrink: 0;
+  margin-left: -20%;
+  clip-path: none;
+}
+.city-3 .city-art > i:nth-child(even) {
+  height: 100%;
+}
+/* [CSS-054] Chân trang ghi nguồn và thời điểm dữ liệu. */
+.page-footer {
+  border-top: 1px solid var(--border);
+  margin-top: 32px;
+  padding-top: 21px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  color: var(--muted);
+  font-size: 8px;
+}
+.page-footer > div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.footer-cloud {
+  color: #8ba9cd;
+}
+.footer-divider {
+  padding: 0 5px;
+}
+.page-footer > div:last-child {
+  gap: 9px;
+  font-size: 7px;
+}
+.page-footer a {
+  text-decoration: none;
+}
+.page-footer a:hover {
+  color: var(--blue);
+}
+.page-footer button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  font-size: 7px;
+  color: var(--muted);
+}
+.data-timestamp {
+  font-size: 7px;
+  color: var(--muted);
+  text-align: right;
+  margin-top: 12px;
+  line-height: 1.8;
+  opacity: 0.8;
+}
+.saved-view {
+  min-height: 70vh;
+}
+.saved-view-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin: 25px 0 25px;
+}
+.saved-view-heading > p {
+  color: var(--subtle);
+  font-size: 12px;
+  line-height: 1.8;
+}
+.primary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 9px;
+  padding: 11px 17px;
+  background: #3478ef;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.primary-button:hover {
+  background: #2162d1;
+  box-shadow: 0 5px 15px #3478ef20;
+}
+/* [CSS-055] Grid địa điểm đã lưu; thay đổi số cột theo màn hình. */
+.saved-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+.saved-city-card {
+  position: relative;
+  overflow: hidden;
+}
+.saved-city-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 25px;
+  text-align: left;
+}
+.saved-city-icon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  background: var(--blue-tint);
+  color: var(--blue);
+  border-radius: 14px;
+}
+.saved-city-main h2 {
+  font-size: 16px;
+  font-weight: 750;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.saved-city-main p {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 5px;
+}
+.saved-city-main div > span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--blue);
+  font-size: 10px;
+  margin-top: 20px;
+}
+.remove-saved {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  border: 0;
+  width: 27px;
+  height: 27px;
+  color: #d8ad52;
+  background: none;
+}
+/* [CSS-056] Nội dung hướng dẫn khi người dùng chưa lưu địa điểm nào. */
+.empty-saved {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 430px;
+  padding: 35px;
+}
+.empty-saved-art {
+  position: relative;
+  display: grid;
+  place-items: center;
+  background: var(--blue-tint);
+  width: 100px;
+  height: 100px;
+  border-radius: 30px;
+  color: #8bb1e9;
+  margin-bottom: 25px;
+}
+.empty-saved-art > svg:last-child {
+  position: absolute;
+  bottom: -8px;
+  right: -9px;
+  background: var(--card);
+  padding: 5px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  color: #deb967;
+  border: 1px solid var(--border);
+}
+.empty-saved h2 {
+  font-size: 21px;
+  letter-spacing: -0.5px;
+}
+.empty-saved p {
+  font-size: 12px;
+  line-height: 1.9;
+  color: var(--muted);
+  margin: 14px 0 25px;
+}
+/* [CSS-057] Thông báo ngắn, nổi trên nội dung; timer trong React tự ẩn sau 3,8 giây. */
+.toast {
+  position: fixed;
+  bottom: 25px;
+  left: calc(50% + 95px);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 17px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  box-shadow: 0 10px 40px #14294d25;
+  z-index: 120;
+  max-width: min(550px, 90vw);
+  font-size: 11px;
+  line-height: 1.7;
+  animation: toast-in 0.2s ease-out;
+}
+.toast > svg {
+  color: #6cb49b;
+}
+.toast button {
+  display: grid;
+  place-items: center;
+  margin-left: 12px;
+  padding: 0;
+  color: var(--muted);
+}
+/* [CSS-058] Lớp phủ phía sau hộp thông tin nguồn dữ liệu. */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  background: #162b4b60;
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 25px;
+  overflow-y: auto;
+}
+/* [CSS-059] Khung thông tin về ứng dụng và nhà cung cấp API. */
+.info-modal {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 35px;
+  max-width: 560px;
+  width: 100%;
+  box-shadow: 0 30px 80px #0f234b30;
+  max-height: calc(100dvh - 50px);
+  overflow-y: auto;
+}
+.modal-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  background: var(--bg);
+}
+.info-modal > .brand {
+  font-size: 23px;
+  margin-bottom: 27px;
+}
+.info-modal > .brand small {
+  font-size: 6px;
+}
+.info-modal h2 {
+  font-size: 21px;
+  letter-spacing: -0.5px;
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+.info-modal > p {
+  font-size: 11px;
+  line-height: 1.9;
+  color: var(--subtle);
+}
+.info-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  margin-top: 25px;
+}
+.info-item > svg {
+  color: var(--blue);
+  margin-top: 3px;
+}
+.info-item strong {
+  font-size: 11px;
+  line-height: 1.7;
+}
+.info-item p {
+  font-size: 10px;
+  line-height: 1.9;
+  color: var(--muted);
+  margin-top: 5px;
+}
+.info-modal .info-license {
+  font-size: 9px;
+  line-height: 1.9;
+  padding-top: 19px;
+  border-top: 1px solid var(--border);
+  margin-top: 25px;
+}
+.info-license a {
+  color: var(--blue);
+}
+.info-modal > .primary-button {
+  margin-top: 22px;
+  width: 100%;
+}
+.sidebar-backdrop {
+  display: none;
+}
+.spin {
+  animation: spin 1.3s linear infinite;
+}
+:root[data-theme="dark"] .sidebar-bottom {
+  background: #1e3048;
+}
+:root[data-theme="dark"] .sidebar-bottom h3 {
+  color: #aac7e9;
+}
+:root[data-theme="dark"] .little-sky > svg {
+  fill: #dce6f3;
+}
+:root[data-theme="dark"] .current-card:not(.current-night) {
+  background: linear-gradient(115deg, #b4cee9, #a4c3e6);
+  border-color: #496584;
+}
+:root[data-theme="dark"] .current-card:not(.current-night) .current-top p {
+  color: #54769d;
+}
+:root[data-theme="dark"] .chart-tabs button.active {
+  background: #3c3527;
+  color: #e9bd6b;
+}
+:root[data-theme="dark"] .small-tag {
+  background: #263e36;
+  color: #94c9ad;
+}
+:root[data-theme="dark"] .tag-amber {
+  background: #433b26;
+  color: #d6bd76;
+}
+:root[data-theme="dark"] .tag-orange {
+  background: #473426;
+  color: #daab80;
+}
+:root[data-theme="dark"] .humidity-meter {
+  background: #253c54;
+}
+:root[data-theme="dark"] .tip-card {
+  background: #21372f;
+  border-color: #2c4338;
+}
+:root[data-theme="dark"] .tip-card h3 {
+  color: #afd0bc;
+}
+:root[data-theme="dark"] .tip-card p {
+  color: #91b19f;
+}
+:root[data-theme="dark"] .tip-icon {
+  background: #2d493b;
+  color: #a3c9b4;
+}
+:root[data-theme="dark"] .tip-footer {
+  border-color: #3a5043;
+}
+:root[data-theme="dark"] .city-card {
+  filter: brightness(0.83);
+}
+:root[data-theme="dark"] .error-banner {
+  background: #3b3020;
+  border-color: #5b492b;
+  color: #d4bb8e;
+}
+/* [CSS-060] Định nghĩa chuyển động nền cho skeleton tải dữ liệu. */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+/* [CSS-061] Định nghĩa chuyển động quay cho biểu tượng đang tải. */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* [CSS-062] Hiệu ứng xuất hiện của toast. */
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    bottom: 15px;
+  }
+  to {
+    opacity: 1;
+    bottom: 25px;
+  }
+}
+/* [CSS-063] Màn hình lớn: tăng không gian và kích thước đọc; không thay đổi dữ liệu. */
+@media (min-width: 1600px) {
+  .main-content {
+    padding: 40px 46px 24px;
+  }
+  .primary-grid {
+    grid-template-columns: minmax(0, 1fr) 330px;
+    gap: 27px;
+  }
+  .weather-main,
+  .weather-aside {
+    gap: 27px;
+  }
+  .current-card {
+    min-height: 321px;
+    padding: 28px 31px 0;
+  }
+  .current-body {
+    min-height: 191px;
+  }
+  .current-temperature {
+    font-size: 89px;
+  }
+  .weather-scene {
+    right: 30px;
+    top: 2px;
+    transform: scale(1.1);
+    transform-origin: right center;
+  }
+  .current-stats {
+    min-height: 59px;
+  }
+  .current-location h2 {
+    font-size: 23px;
+  }
+  .current-stats span {
+    font-size: 10px;
+  }
+  .hourly-section {
+    padding: 26px;
+  }
+  .weather-chart {
+    height: 157px;
+  }
+  .metric-card {
+    padding: 20px;
+    min-height: 171px;
+  }
+  .day-row {
+    padding: 13px 11px;
+    min-height: 69px;
+  }
+  .weekly-section {
+    padding: 26px 21px 20px;
+  }
+  .day-name > strong {
+    font-size: 10px;
+  }
+  .tip-card p {
+    font-size: 10px;
+    max-width: none;
+  }
+  .sun-arc {
+    height: 109px;
+  }
+  .sidebar-bottom {
+    margin-bottom: 15px;
+  }
+}
+/* [CSS-064] Điều chỉnh riêng cho màn hình rất rộng. */
+@media (min-width: 1900px) {
+  .main-content {
+    margin-right: auto;
+    margin-left: max(225px, calc((100vw - 1440px) / 2 + 170px));
+    max-width: 1440px;
+  }
+}
+/* [CSS-065] Laptop hẹp: thu gọn kích thước và khoảng cách của bố cục. */
+@media (max-width: 1240px) {
+  .sidebar {
+    width: 200px;
+    padding: 30px 14px 20px;
+  }
+  .brand {
+    font-size: 23px;
+    gap: 8px;
+  }
+  .brand-mark {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+  }
+  .brand small {
+    font-size: 6px;
+    letter-spacing: 1.1px;
+  }
+  .sidebar-label {
+    font-size: 8px;
+  }
+  .nav-item {
+    font-size: 10px;
+    gap: 10px;
+  }
+  .main-content {
+    margin-left: 200px;
+    padding: 28px 25px 18px;
+  }
+  .primary-grid {
+    grid-template-columns: minmax(0, 1fr) 275px;
+    gap: 18px;
+  }
+  .weather-main,
+  .weather-aside {
+    gap: 18px;
+  }
+  .header-actions {
+    gap: 7px;
+  }
+  .search-wrapper {
+    width: 245px;
+  }
+  .page-heading h1 {
+    font-size: 24px;
+  }
+  .page-heading .eyebrow {
+    font-size: 7px;
+    letter-spacing: 1.1px;
+  }
+  .topbar {
+    gap: 15px;
+  }
+  .location-tab {
+    padding: 9px 10px;
+    font-size: 9px;
+  }
+  .update-status {
+    font-size: 7px;
+    gap: 4px;
+  }
+  .current-card {
+    padding: 23px 22px 0;
+  }
+  .current-location h2 {
+    font-size: 18px;
+    max-width: 200px;
+  }
+  .country-label {
+    display: none;
+  }
+  .current-stats {
+    gap: 7px;
+  }
+  .current-stats > div {
+    gap: 5px;
+  }
+  .current-stats span {
+    font-size: 7px;
+  }
+  .current-stats strong {
+    margin-left: 3px;
+  }
+  .current-stats svg {
+    width: 15px;
+    height: 15px;
+  }
+  .weather-scene {
+    transform: scale(0.87);
+    transform-origin: right center;
+    right: -17px;
+    top: -4px;
+  }
+  .current-temperature {
+    font-size: 74px;
+  }
+  .current-range {
+    gap: 9px;
+    font-size: 8px;
+  }
+  .current-range > .feels-label {
+    font-size: 8px;
+    padding-left: 8px;
+  }
+  .hourly-section {
+    padding: 20px 17px 15px;
+  }
+  .section-heading h2 {
+    font-size: 13px;
+  }
+  .hour-item > span {
+    font-size: 7px;
+  }
+  .hour-item > strong {
+    font-size: 12px;
+  }
+  .hour-item > svg {
+    width: 24px;
+    height: 24px;
+  }
+  .hourly-cards {
+    gap: 2px;
+  }
+  .metrics-grid {
+    gap: 9px;
+  }
+  .metric-card {
+    padding: 16px 13px 13px;
+    min-height: 154px;
+  }
+  .metric-title {
+    gap: 5px;
+  }
+  .metric-title h3 {
+    font-size: 8px;
+  }
+  .metric-title > svg {
+    width: 14px;
+    height: 14px;
+  }
+  .metric-value {
+    font-size: 25px;
+  }
+  .wind-compass {
+    right: 12px;
+    width: 40px;
+    height: 40px;
+    top: 48px;
+  }
+  .wind-compass > svg {
+    width: 22px;
+    height: 22px;
+  }
+  .wind-compass > span {
+    left: 16px;
+  }
+  .wind-compass > span:last-child {
+    left: 16px;
+  }
+  .wind-card .metric-value {
+    font-size: 22px;
+  }
+  .wind-card .metric-value > span {
+    font-size: 8px;
+  }
+  .metric-note {
+    font-size: 7px;
+  }
+  .metric-note > span:not(.small-tag) {
+    font-size: 6px;
+  }
+  .wind-card .metric-note {
+    margin-top: 31px;
+  }
+  .visibility-lines {
+    right: 11px;
+    top: 57px;
+  }
+  .visibility-lines > i {
+    width: 26px;
+  }
+  .cloud-cover-visual > svg {
+    right: 8px;
+    width: 30px;
+  }
+  .weekly-section {
+    padding: 20px 14px 15px;
+  }
+  .day-row {
+    grid-template-columns: 1fr 32px 57px 8px;
+    gap: 7px;
+    padding: 11px 7px;
+  }
+  .day-name > strong {
+    font-size: 8px;
+  }
+  .day-temperatures {
+    gap: 8px;
+    font-size: 11px;
+  }
+  .sun-section {
+    padding: 20px 18px;
+  }
+  .tip-card {
+    padding: 21px;
+  }
+  .city-cards {
+    gap: 10px;
+  }
+  .city-card {
+    padding: 15px 13px 21px;
+  }
+  .city-card-main {
+    gap: 5px;
+  }
+  .city-card-main h3 {
+    font-size: 12px;
+  }
+  .city-card-main > strong {
+    font-size: 24px;
+  }
+  .city-card-main > .weather-icon {
+    width: 23px;
+  }
+  .city-card-main p {
+    font-size: 7px;
+  }
+  .saved-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+/* [CSS-066] Màn hình vừa: điều chỉnh các cột/thẻ để tránh tràn ngang toàn trang. */
+@media (max-width: 1080px) {
+  .sidebar {
+    width: 180px;
+    padding: 25px 10px 18px;
+  }
+  .brand-button {
+    padding: 0 9px;
+  }
+  .brand {
+    font-size: 21px;
+  }
+  .brand-mark {
+    width: 33px;
+    height: 33px;
+    border-radius: 10px;
+  }
+  .brand-mark > svg {
+    width: 22px;
+  }
+  .brand small {
+    font-size: 5px;
+    letter-spacing: 1px;
+  }
+  .nav-item {
+    font-size: 9px;
+    padding: 0 11px;
+    gap: 9px;
+  }
+  .nav-item > svg {
+    width: 17px;
+  }
+  .sidebar-label {
+    font-size: 7px;
+    letter-spacing: 1px;
+    margin-top: 39px;
+  }
+  .sidebar-label.saved-label {
+    font-size: 7px;
+  }
+  .sidebar-bottom {
+    padding: 10px 13px 15px;
+  }
+  .sidebar-bottom h3 {
+    font-size: 15px;
+  }
+  .sidebar-bottom p {
+    font-size: 9px;
+  }
+  .main-content {
+    margin-left: 180px;
+    padding: 24px 21px 17px;
+  }
+  .primary-grid {
+    grid-template-columns: minmax(0, 1fr) 249px;
+    gap: 16px;
+  }
+  .page-heading h1 {
+    font-size: 22px;
+  }
+  .search-wrapper {
+    width: 210px;
+  }
+  .search-box input {
+    font-size: 9px;
+  }
+  .location-tab {
+    padding: 9px 8px;
+    font-size: 8px;
+  }
+  .location-tabs {
+    gap: 3px;
+  }
+  .update-status {
+    font-size: 0;
+    gap: 5px;
+  }
+  .update-status > .status-dot {
+    width: 5px;
+  }
+  .current-card {
+    padding: 22px 19px 0;
+    min-height: 284px;
+  }
+  .current-location h2 {
+    font-size: 17px;
+  }
+  .current-temperature {
+    font-size: 69px;
+  }
+  .weather-scene {
+    transform: scale(0.76);
+    right: -24px;
+    top: -2px;
+  }
+  .current-range {
+    gap: 6px;
+  }
+  .current-range > .feels-label {
+    padding-left: 6px;
+    font-size: 7px;
+  }
+  .current-body {
+    min-height: 167px;
+  }
+  .current-stats {
+    justify-content: flex-start;
+    gap: 15px;
+  }
+  .current-stats > div {
+    gap: 4px;
+  }
+  .current-stats strong {
+    display: block;
+    margin-left: 0;
+    margin-top: 2px;
+  }
+  .current-stats span {
+    font-size: 7px;
+  }
+  .section-heading h2 {
+    font-size: 12px;
+  }
+  .hourly-section {
+    padding: 19px 15px 14px;
+  }
+  .section-heading p {
+    font-size: 8px;
+  }
+  .hourly-badge {
+    font-size: 7px;
+  }
+  .chart-tabs button {
+    font-size: 8px;
+    padding: 7px 8px;
+    gap: 5px;
+  }
+  .hour-item > small {
+    font-size: 7px;
+  }
+  .metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .metric-title h3 {
+    font-size: 9px;
+  }
+  .metric-value {
+    font-size: 27px;
+  }
+  .wind-card .metric-value {
+    font-size: 25px;
+  }
+  .wind-compass {
+    right: 17px;
+    width: 44px;
+    height: 44px;
+    top: 44px;
+  }
+  .wind-compass > span,
+  .wind-compass > span:last-child {
+    left: 18px;
+  }
+  .metric-note {
+    font-size: 8px;
+  }
+  .metric-note > span:not(.small-tag) {
+    font-size: 7px;
+  }
+  .visibility-lines {
+    right: 18px;
+  }
+  .cloud-cover-visual > svg {
+    right: 18px;
+    width: 35px;
+  }
+  .weekly-section {
+    padding: 20px 12px 15px;
+  }
+  .day-row {
+    gap: 6px;
+    grid-template-columns: 1fr 31px 53px 7px;
+  }
+  .day-name > strong {
+    font-size: 8px;
+  }
+  .day-weather > svg {
+    width: 23px;
+    height: 23px;
+  }
+  .day-temperatures {
+    font-size: 11px;
+    gap: 7px;
+  }
+  .day-temperatures > span {
+    font-size: 9px;
+  }
+  .forecast-footnote {
+    font-size: 6px;
+  }
+  .tip-card h3 {
+    font-size: 13px;
+  }
+  .tip-card p {
+    font-size: 9px;
+  }
+  .city-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .city-card-main h3 {
+    font-size: 14px;
+  }
+  .city-card-main > strong {
+    font-size: 27px;
+  }
+  .city-card-main p {
+    font-size: 8px;
+  }
+  .city-card-main > .weather-icon {
+    width: 30px;
+  }
+  .page-footer {
+    font-size: 7px;
+  }
+}
+/* [CSS-067] Tablet: sắp xếp lại vùng điều hướng và nội dung. */
+@media (max-width: 900px) {
+  .sidebar {
+    width: 182px;
+  }
+  .main-content {
+    margin-left: 182px;
+    padding: 25px 22px 17px;
+  }
+  .topbar {
+    flex-wrap: wrap;
+    gap: 19px;
+    margin-bottom: 22px;
+  }
+  .page-heading {
+    width: 100%;
+  }
+  .page-heading h1 {
+    font-size: 26px;
+  }
+  .page-heading .eyebrow {
+    font-size: 8px;
+  }
+  .header-actions {
+    width: 100%;
+    gap: 9px;
+  }
+  .search-wrapper {
+    flex: 1;
+    width: auto;
+  }
+  .search-box input {
+    font-size: 11px;
+  }
+  .primary-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .weather-aside {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+  .weekly-section {
+    grid-row: span 2;
+    padding: 21px 14px 17px;
+  }
+  .day-row {
+    grid-template-columns: 1fr 32px 53px 7px;
+    gap: 5px;
+  }
+  .tip-card {
+    padding: 19px;
+  }
+  .tip-card h3 {
+    font-size: 12px;
+  }
+  .tip-card p {
+    font-size: 8px;
+  }
+  .sun-section {
+    padding: 21px 18px;
+  }
+  .sun-section .section-heading h2 {
+    font-size: 11px;
+  }
+  .sun-times > div {
+    gap: 5px;
+  }
+  .sun-times strong {
+    font-size: 13px;
+  }
+  .sun-times > div > svg {
+    width: 15px;
+  }
+  .metrics-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .metric-title h3 {
+    font-size: 8px;
+  }
+  .metric-value {
+    font-size: 26px;
+  }
+  .wind-card .metric-value {
+    font-size: 22px;
+  }
+  .wind-compass {
+    width: 38px;
+    height: 38px;
+    right: 11px;
+    top: 49px;
+  }
+  .wind-compass > span,
+  .wind-compass > span:last-child {
+    left: 15px;
+  }
+  .wind-compass > svg {
+    width: 22px;
+    height: 22px;
+  }
+  .metric-note {
+    font-size: 7px;
+  }
+  .metric-note > span:not(.small-tag) {
+    font-size: 6px;
+  }
+  .cloud-cover-visual > svg {
+    right: 12px;
+    width: 30px;
+  }
+  .current-card {
+    min-height: 296px;
+    padding: 24px 26px 0;
+  }
+  .current-temperature {
+    font-size: 78px;
+  }
+  .current-body {
+    min-height: 174px;
+  }
+  .current-location h2 {
+    font-size: 20px;
+  }
+  .current-stats {
+    justify-content: space-between;
+    gap: 15px;
+  }
+  .current-stats strong {
+    display: inline;
+    margin-left: 4px;
+    margin-top: 0;
+  }
+  .current-stats span {
+    font-size: 8px;
+  }
+  .weather-scene {
+    transform: scale(0.92);
+    right: -5px;
+    top: -4px;
+  }
+  .current-range {
+    gap: 11px;
+    font-size: 9px;
+  }
+  .current-range > .feels-label {
+    font-size: 8px;
+    padding-left: 11px;
+  }
+  .hourly-section {
+    padding: 23px 21px 17px;
+  }
+  .section-heading h2 {
+    font-size: 14px;
+  }
+  .section-heading p {
+    font-size: 9px;
+  }
+  .chart-tabs button {
+    font-size: 9px;
+  }
+  .weather-chart {
+    height: 151px;
+  }
+  .hour-item > span {
+    font-size: 8px;
+  }
+  .hour-item > strong {
+    font-size: 13px;
+  }
+  .hour-item > small {
+    font-size: 8px;
+  }
+  .hour-item > svg {
+    width: 26px;
+    height: 26px;
+  }
+  .page-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .data-timestamp {
+    text-align: left;
+  }
+  .saved-grid {
+    grid-template-columns: 1fr;
+  }
+  .saved-view-heading {
+    align-items: flex-start;
+  }
+  .saved-view-heading > p {
+    font-size: 10px;
+  }
+  .saved-view-heading .primary-button {
+    font-size: 9px;
+    padding: 10px 12px;
+  }
+}
+/* [CSS-068] Điện thoại: hiển thị menu thu gọn và bố cục ưu tiên chiều dọc. */
+@media (max-width: 720px) {
+  .sidebar {
+    visibility: hidden;
+    transform: translateX(-100%);
+    transition: transform 0.22s ease;
+    width: 230px;
+    padding: 30px 21px 22px;
+    z-index: 100;
+  }
+  .sidebar.is-open {
+    visibility: visible;
+    transform: translateX(0);
+  }
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: #14284455;
+    backdrop-filter: blur(3px);
+    z-index: 90;
+  }
+  .sidebar .brand {
+    font-size: 25px;
+  }
+  .sidebar .brand-mark {
+    width: 40px;
+    height: 40px;
+  }
+  .sidebar .brand small {
+    font-size: 6.5px;
+  }
+  .sidebar-label {
+    font-size: 9px;
+    margin-top: 43px;
+  }
+  .sidebar-label.saved-label {
+    font-size: 8px;
+  }
+  .nav-item {
+    font-size: 12px;
+    height: 47px;
+    gap: 12px;
+  }
+  .nav-item > svg {
+    width: 19px;
+  }
+  .sidebar-bottom h3 {
+    font-size: 18px;
+  }
+  .sidebar-bottom p {
+    font-size: 10px;
+  }
+  .sidebar-footer {
+    font-size: 8px;
+  }
+  .main-content {
+    margin-left: 0;
+    padding: 19px 21px 20px;
+  }
+  .mobile-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .mobile-brand > .icon-button {
+    width: 29px;
+    height: 31px;
+    background: none;
+    border: 0;
+    border-radius: 5px;
+  }
+  .brand-small {
+    font-size: 20px;
+    gap: 7px;
+  }
+  .brand-small > .brand-mark {
+    width: 29px;
+    height: 29px;
+    border-radius: 9px;
+    box-shadow: none;
+  }
+  .brand-small .brand-mark svg {
+    width: 20px;
+    height: 20px;
+  }
+  .brand-small small {
+    display: none;
+  }
+  .topbar {
+    gap: 21px;
+    margin-bottom: 17px;
+  }
+  .page-heading h1 {
+    font-size: 27px;
+    margin-top: 5px;
+  }
+  .page-heading .eyebrow {
+    font-size: 7px;
+  }
+  .page-heading p {
+    font-size: 9px;
+    margin-top: 5px;
+  }
+  .header-actions {
+    gap: 8px;
+    margin-top: -2px;
+  }
+  .search-box {
+    height: 44px;
+    border-radius: 10px;
+  }
+  .search-box input {
+    font-size: 11px;
+  }
+  .location-button,
+  .settings-button {
+    width: 42px;
+    height: 43px;
+    border-radius: 10px;
+  }
+  .location-bar {
+    gap: 7px;
+    margin-bottom: 18px;
+    align-items: center;
+  }
+  .location-tabs {
+    gap: 2px;
+    flex-wrap: nowrap;
+    overflow: auto;
+    scrollbar-width: none;
+    max-width: calc(100% - 28px);
+  }
+  .location-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .location-tab {
+    font-size: 9px;
+    padding: 9px 10px;
+    gap: 4px;
+  }
+  .location-tab.active {
+    border-color: transparent;
+  }
+  .add-location {
+    min-width: 28px;
+  }
+  .update-status {
+    gap: 0;
+  }
+  .update-status > .status-dot {
+    display: none;
+  }
+  .refresh-button {
+    padding: 4px;
+  }
+  .current-card {
+    padding: 23px 25px 0;
+    border-radius: 18px;
+  }
+  .primary-grid {
+    gap: 20px;
+  }
+  .weather-main {
+    gap: 20px;
+  }
+  .current-stats span {
+    font-size: 8px;
+  }
+  .hourly-section {
+    padding: 22px 21px 17px;
+  }
+  .metrics-grid {
+    gap: 12px;
+  }
+  .metric-card {
+    padding: 18px 16px 15px;
+    min-height: 159px;
+  }
+  .metric-title h3 {
+    font-size: 9px;
+  }
+  .metric-value {
+    font-size: 29px;
+  }
+  .metric-note {
+    font-size: 8px;
+  }
+  .metric-note > span:not(.small-tag) {
+    font-size: 7px;
+  }
+  .wind-card .metric-value {
+    font-size: 27px;
+  }
+  .wind-card .metric-value > span {
+    font-size: 9px;
+  }
+  .wind-compass {
+    right: 16px;
+    top: 48px;
+    width: 43px;
+    height: 43px;
+  }
+  .wind-compass > span,
+  .wind-compass > span:last-child {
+    left: 17px;
+  }
+  .wind-card .metric-note {
+    margin-top: 28px;
+  }
+  .visibility-lines {
+    right: 16px;
+  }
+  .cloud-cover-visual > svg {
+    right: 15px;
+    width: 36px;
+  }
+  .weather-aside {
+    gap: 17px;
+  }
+  .weekly-section {
+    padding: 23px 17px 19px;
+  }
+  .day-row {
+    grid-template-columns: 1fr 34px 59px 8px;
+    gap: 7px;
+    min-height: 65px;
+  }
+  .day-name > strong {
+    font-size: 9px;
+  }
+  .day-temperatures {
+    font-size: 12px;
+    gap: 8px;
+  }
+  .day-temperatures > span {
+    font-size: 10px;
+  }
+  .day-weather > svg {
+    width: 25px;
+    height: 25px;
+  }
+  .weekly-subtitle {
+    font-size: 8px;
+  }
+  .forecast-footnote {
+    font-size: 7px;
+  }
+  .selected-day-detail span,
+  .selected-day-detail strong {
+    font-size: 8px;
+  }
+  .tip-card {
+    padding: 24px;
+  }
+  .tip-card h3 {
+    font-size: 14px;
+  }
+  .tip-card p {
+    font-size: 10px;
+    max-width: none;
+  }
+  .sun-section {
+    padding: 24px;
+  }
+  .sun-section .section-heading h2 {
+    font-size: 13px;
+  }
+  .sun-arc {
+    height: 109px;
+  }
+  .sun-times strong {
+    font-size: 16px;
+  }
+  .sun-times span {
+    font-size: 8px;
+  }
+  .sun-times > div {
+    gap: 8px;
+  }
+  .sun-times > div > svg {
+    width: 18px;
+  }
+  .explore-section {
+    margin-top: 29px;
+  }
+  .city-card {
+    padding: 18px 18px 25px;
+  }
+  .city-cards {
+    gap: 12px;
+  }
+  .page-footer {
+    margin-top: 28px;
+    padding-top: 20px;
+    gap: 10px;
+    font-size: 8px;
+  }
+  .page-footer > div:last-child {
+    font-size: 8px;
+  }
+  .page-footer button {
+    font-size: 8px;
+  }
+  .data-timestamp {
+    font-size: 7px;
+    line-height: 1.9;
+    margin-top: 13px;
+  }
+  .toast {
+    left: 50%;
+    bottom: 20px;
+    font-size: 11px;
+    min-width: 260px;
+    width: max-content;
+    max-width: calc(100vw - 32px);
+  }
+  .search-results {
+    min-width: 270px;
+    right: -45px;
+  }
+  .search-label {
+    font-size: 9px;
+  }
+  .search-result strong {
+    font-size: 12px;
+  }
+  .search-result small {
+    font-size: 10px;
+  }
+  .search-result {
+    padding: 11px 9px;
+  }
+  .search-footer {
+    font-size: 8px;
+  }
+  .search-empty {
+    font-size: 11px;
+  }
+  .saved-view-heading {
+    margin-top: 18px;
+    align-items: center;
+  }
+  .saved-view-heading p {
+    font-size: 11px;
+  }
+  .saved-view-heading .primary-button {
+    font-size: 10px;
+  }
+  .saved-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .saved-city-main {
+    padding: 23px 17px;
+    gap: 10px;
+  }
+  .saved-city-main h2 {
+    font-size: 14px;
+  }
+  .saved-city-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+  }
+  .empty-saved {
+    min-height: 380px;
+    padding: 25px 18px;
+  }
+  .empty-saved h2 {
+    font-size: 18px;
+  }
+  .empty-saved p {
+    font-size: 11px;
+  }
+  .saved-view {
+    min-height: 60vh;
+  }
+  .skip-link {
+    left: 20px;
+  }
+  .info-modal {
+    padding: 28px;
+  }
+  .info-modal h2 {
+    font-size: 19px;
+  }
+  .info-modal > p {
+    font-size: 12px;
+  }
+  .info-item strong {
+    font-size: 12px;
+  }
+  .info-item p {
+    font-size: 11px;
+  }
+  .info-modal .info-license {
+    font-size: 10px;
+  }
+  .modal-backdrop {
+    padding: 18px;
+  }
+  .info-modal {
+    max-height: calc(100dvh - 36px);
+  }
+}
+/* [CSS-069] Điện thoại nhỏ: tiếp tục giảm khoảng cách và kích thước điều khiển phù hợp. */
+@media (max-width: 480px) {
+  .main-content {
+    padding: 17px 16px 19px;
+  }
+  .mobile-brand {
+    padding-bottom: 16px;
+  }
+  .topbar {
+    gap: 18px;
+  }
+  .page-heading h1 {
+    font-size: 25px;
+  }
+  .heading-sun {
+    font-size: 22px;
+    margin-left: 10px;
+  }
+  .page-heading p {
+    font-size: 8px;
+  }
+  .header-actions {
+    gap: 7px;
+  }
+  .search-box {
+    padding: 0 11px;
+    gap: 8px;
+  }
+  .search-box input {
+    font-size: 10px;
+  }
+  .search-box > svg {
+    width: 17px;
+  }
+  .search-key {
+    font-size: 7px;
+  }
+  .location-button,
+  .settings-button {
+    width: 39px;
+  }
+  .location-tab {
+    font-size: 8px;
+    padding: 9px 9px;
+  }
+  .location-tab > svg {
+    width: 12px;
+  }
+  .location-tabs {
+    gap: 1px;
+  }
+  .location-bar {
+    margin-bottom: 16px;
+  }
+  .current-card {
+    padding: 21px 20px 0;
+    min-height: 285px;
+  }
+  .current-location h2 {
+    font-size: 19px;
+    max-width: 215px;
+  }
+  .current-location > svg {
+    width: 17px;
+  }
+  .current-top p {
+    margin-left: 25px;
+    font-size: 8px;
+  }
+  .favorite-button {
+    width: 30px;
+    height: 30px;
+  }
+  .favorite-button > svg {
+    width: 18px;
+  }
+  .current-body {
+    min-height: 168px;
+  }
+  .current-temperature {
+    font-size: 75px;
+    padding-top: 3px;
+  }
+  .current-temperature > span {
+    font-size: 17px;
+    margin-top: 18px;
+  }
+  .current-description {
+    font-size: 12px;
+  }
+  .current-range {
+    font-size: 8px;
+    gap: 9px;
+    margin-top: 10px;
+  }
+  .current-range > .feels-label {
+    font-size: 7px;
+    padding-left: 9px;
+  }
+  .weather-scene {
+    transform: scale(0.77);
+    right: -25px;
+    top: 0;
+  }
+  .current-stats {
+    gap: 6px;
+    min-height: 54px;
+    margin-top: 4px;
+  }
+  .current-stats span {
+    font-size: 7px;
+  }
+  .current-stats strong {
+    font-size: 7px;
+    margin-left: 3px;
+  }
+  .current-stats > div {
+    gap: 4px;
+  }
+  .current-stats svg {
+    width: 13px;
+    height: 13px;
+  }
+  .city-silhouette {
+    width: 90%;
+    height: 80px;
+  }
+  .section-heading h2 {
+    font-size: 13px;
+  }
+  .section-heading p {
+    font-size: 8px;
+  }
+  .hourly-section {
+    padding: 21px 16px 16px;
+  }
+  .hourly-badge {
+    font-size: 7px;
+    gap: 4px;
+  }
+  .chart-tabs {
+    margin-top: 17px;
+    gap: 3px;
+  }
+  .chart-tabs button {
+    font-size: 8px;
+    padding: 7px 8px;
+    gap: 5px;
+  }
+  .chart-tabs button > svg {
+    width: 13px;
+  }
+  .weather-chart {
+    height: 139px;
+    margin: 7px -6px 16px;
+  }
+  .hourly-cards {
+    display: flex;
+    overflow-x: auto;
+    padding: 11px 0 2px;
+    gap: 7px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .hour-item {
+    min-width: 45px;
+    padding: 9px 4px;
+    gap: 10px;
+  }
+  .hour-item > span {
+    font-size: 8px;
+  }
+  .hour-item > strong {
+    font-size: 13px;
+  }
+  .hour-item > small {
+    font-size: 7px;
+  }
+  .hour-item > svg {
+    width: 25px;
+    height: 25px;
+  }
+  .metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 11px;
+  }
+  .highlights-section > .section-heading {
+    margin-bottom: 15px;
+  }
+  .section-caption {
+    font-size: 8px;
+  }
+  .metric-card {
+    padding: 18px 17px 14px;
+    min-height: 157px;
+  }
+  .metric-title h3 {
+    font-size: 9px;
+  }
+  .metric-title > svg {
+    width: 15px;
+    height: 15px;
+  }
+  .metric-value {
+    font-size: 29px;
+  }
+  .metric-note {
+    font-size: 8px;
+  }
+  .wind-card .metric-value {
+    font-size: 26px;
+  }
+  .wind-card .metric-value > span {
+    font-size: 9px;
+  }
+  .wind-compass {
+    right: 15px;
+    width: 44px;
+    height: 44px;
+    top: 47px;
+  }
+  .wind-compass > span,
+  .wind-compass > span:last-child {
+    left: 18px;
+  }
+  .wind-compass > svg {
+    width: 24px;
+    height: 24px;
+  }
+  .weather-aside {
+    grid-template-columns: 1fr;
+    gap: 19px;
+  }
+  .weekly-section {
+    grid-row: auto;
+    padding: 23px 20px 18px;
+  }
+  .weekly-section .section-heading h2 {
+    font-size: 15px;
+  }
+  .weekly-subtitle {
+    font-size: 9px;
+    margin-top: 7px;
+    margin-bottom: 12px;
+  }
+  .day-row {
+    grid-template-columns: 1fr 42px 85px 13px;
+    min-height: 66px;
+    padding: 11px 12px;
+    gap: 16px;
+  }
+  .day-name > strong {
+    font-size: 11px;
+  }
+  .day-name > small {
+    font-size: 8px;
+  }
+  .day-weather > svg {
+    width: 27px;
+    height: 27px;
+  }
+  .day-weather > small {
+    font-size: 8px;
+  }
+  .day-temperatures {
+    font-size: 15px;
+    gap: 15px;
+  }
+  .day-temperatures > span {
+    font-size: 12px;
+  }
+  .day-row > svg {
+    width: 14px;
+  }
+  .selected-day-detail {
+    margin-top: 15px;
+    padding-top: 16px;
+    gap: 12px;
+  }
+  .selected-day-detail span,
+  .selected-day-detail strong {
+    font-size: 10px;
+  }
+  .forecast-footnote {
+    font-size: 8px;
+    margin-top: 2px;
+  }
+  .sun-section {
+    padding: 24px 25px;
+  }
+  .sun-section .section-heading h2 {
+    font-size: 14px;
+  }
+  .sun-arc {
+    height: 119px;
+    max-width: 300px;
+    margin: 10px auto 0;
+  }
+  .sun-middle {
+    top: 63px;
+    font-size: 9px;
+  }
+  .sun-times {
+    max-width: 290px;
+    margin: 0 auto;
+  }
+  .sun-times span {
+    font-size: 9px;
+  }
+  .sun-times strong {
+    font-size: 17px;
+  }
+  .tip-card {
+    padding: 23px 24px;
+  }
+  .tip-card .eyebrow {
+    font-size: 7px;
+  }
+  .tip-card h3 {
+    font-size: 16px;
+  }
+  .tip-card p {
+    font-size: 11px;
+    max-width: none;
+    line-height: 1.9;
+  }
+  .tip-footer {
+    font-size: 8px;
+    margin-top: 17px;
+  }
+  .tip-icon {
+    position: absolute;
+    top: 22px;
+    right: 22px;
+    width: 32px;
+    height: 32px;
+  }
+  .tip-card h3 {
+    padding-right: 31px;
+  }
+  .explore-section .section-heading {
+    gap: 5px;
+    align-items: flex-start;
+  }
+  .explore-section .section-heading h2 {
+    font-size: 14px;
+  }
+  .explore-section .section-heading p {
+    font-size: 8px;
+  }
+  .text-button {
+    font-size: 8px;
+    gap: 4px;
+    white-space: nowrap;
+    margin-top: 2px;
+  }
+  .city-cards {
+    gap: 10px;
+  }
+  .city-card {
+    padding: 15px 14px 21px;
+    min-height: 129px;
+  }
+  .city-card-top > span {
+    font-size: 6px;
+  }
+  .city-card-main {
+    margin-top: 14px;
+    gap: 5px;
+    flex-wrap: wrap;
+  }
+  .city-card-main > div {
+    min-width: 100%;
+    flex-basis: 100%;
+  }
+  .city-card-main h3 {
+    font-size: 13px;
+  }
+  .city-card-main p {
+    font-size: 7px;
+    margin-top: 4px;
+  }
+  .city-card-main > strong {
+    font-size: 26px;
+    margin-top: 3px;
+  }
+  .city-card-main > .weather-icon {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 31px;
+    height: 31px;
+  }
+  .city-card-main > div + .weather-icon + strong {
+    margin-top: 2px;
+  }
+  .page-footer {
+    font-size: 7px;
+  }
+  .page-footer > div:last-child {
+    font-size: 7px;
+    gap: 8px;
+  }
+  .page-footer button {
+    font-size: 7px;
+  }
+  .data-timestamp {
+    font-size: 6.5px;
+  }
+  .saved-view-heading {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  .saved-grid {
+    grid-template-columns: 1fr;
+    gap: 13px;
+  }
+  .saved-city-main {
+    padding: 23px;
+  }
+  .saved-city-main h2 {
+    font-size: 17px;
+  }
+  .saved-city-icon {
+    width: 45px;
+    height: 45px;
+    margin-right: 5px;
+  }
+  .saved-city-main div > span {
+    margin-top: 15px;
+  }
+  .empty-saved {
+    min-height: 360px;
+  }
+  .empty-saved p br {
+    display: none;
+  }
+  .empty-saved h2 {
+    font-size: 17px;
+  }
+  .settings-popover {
+    width: 250px;
+  }
+  .error-banner {
+    font-size: 10px;
+    padding: 12px;
+    gap: 8px;
+  }
+  .error-banner > svg {
+    width: 17px;
+  }
+  .error-banner button {
+    font-size: 9px;
+    padding: 6px 9px;
+  }
+  .info-modal {
+    padding: 27px 23px;
+  }
+  .info-modal h2 {
+    font-size: 18px;
+  }
+  .info-modal > p {
+    font-size: 11px;
+  }
+  .info-item p {
+    font-size: 10px;
+  }
+  .info-item strong {
+    font-size: 11px;
+  }
+  .modal-close {
+    top: 15px;
+    right: 15px;
+  }
+  .info-modal > .brand {
+    font-size: 22px;
+  }
+  .info-modal > .brand .brand-mark {
+    width: 34px;
+    height: 34px;
+  }
+  .info-modal > .brand small {
+    font-size: 5px;
+  }
+}
+/* [CSS-070] Thông báo khi chưa tải được dự báo ngày, tách khỏi trạng thái skeleton. */
+.weekly-unavailable {
+  min-height: 375px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 14px;
+  color: var(--muted);
+  font-size: 10px;
+  text-align: center;
+}
+.weekly-unavailable button {
+  font-size: 9px;
+  color: var(--blue);
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--blue-tint);
+}
+/* [CSS-071] Giảm chuyển động theo tùy chọn trợ năng của hệ điều hành/trình duyệt. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *:before,
+  *:after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
