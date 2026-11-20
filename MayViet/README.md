@@ -2,9 +2,9 @@
 
 Ứng dụng thời tiết Việt Nam chạy bằng lệnh **`python app.py`**. Giữ giao diện kính mờ, thời tiết hiện tại, từng giờ liên tiếp, dự báo 7 ngày, tìm kiếm, định vị, yêu thích và giao diện sáng/tối.
 
-**Để mở bản có sẵn, chỉ cần Python 3.10 trở lên. Không cần BAT, Node.js, Flask hay cài thêm gói pip.** `app.py` dùng thư viện chuẩn để phục vụ giao diện và tự mở trình duyệt. Dữ liệu thời tiết mới vẫn cần Internet.
+**Mở bản có sẵn bằng Python 3.10 trở lên.** Cài `requirements.txt` để chạy Random Forest, Holt–Winters và Gradient Boosting. Nên dùng Python 3.12 hoặc 3.13 để nạp các mô hình TP.HCM đi kèm và cài hai mục AI tùy chọn.
 
-Phần khởi chạy/máy chủ đã chuyển sang Python; giao diện đẹp hiện tại tiếp tục dùng React/TypeScript đã build trong `dist/`. Đây là ứng dụng mở trong trình duyệt, không phải cửa sổ Tkinter. Python không tự huấn luyện mô hình dự báo; dự báo vẫn lấy từ Open-Meteo.
+Giao diện React/TypeScript đã được build trong `dist/`. Trình duyệt tải thời tiết hiện tại và dự báo 7 ngày từ Open-Meteo. Thanh bên có bốn mục thực nghiệm dự báo nhiệt độ giờ kế tiếp và một mục hỏi đáp thời tiết.
 
 Code Python có chú thích tiếng Việt theo từng biến, hàm và khối xử lý; các chú thích trong mã nguồn giao diện trước đó cũng được giữ lại.
 
@@ -38,12 +38,14 @@ Trong VS Code: **Ctrl+P** tìm file, **Ctrl+G** đến số dòng, **Ctrl+Shift+
 
 ```powershell
 python --version
+python -m pip install -r requirements.txt
 python app.py
 ```
 
 Nếu máy Windows nhận lệnh `py` thay cho `python`, dùng:
 
 ```powershell
+py -m pip install -r requirements.txt
 py app.py
 ```
 
@@ -51,7 +53,34 @@ Trình duyệt tự mở, thường tại **http://localhost:5173**. Nếu chưa
 
 Nếu cổng 5173 bận, app thử thêm tối đa 10 cổng và in cổng đã chọn. Hãy dùng đúng địa chỉ đó. Khi cổng đổi, cài đặt/yêu thích có thể thuộc vùng lưu khác của trình duyệt; quay về cùng `localhost:5173` sẽ dùng lại vùng lưu cũ.
 
-`requirements.txt` chỉ có ghi chú vì bản này không có phụ thuộc pip. Không cần tạo môi trường ảo để mở ứng dụng này. Không nhấp đúp `index.html` để chạy mã TSX.
+### Các mục dự báo và hỏi đáp
+
+Mở **Random Forest** hoặc **Time Series** ở thanh điều hướng. Khi đổi sang địa điểm chưa có mô hình, bấm **Huấn luyện**. Hai mục dùng chung kho lịch sử ERA5 theo địa điểm. Với Python 3.10–3.11, có thể huấn luyện lại Random Forest từ CSV đi kèm cho TP.HCM bằng `python train_model.py --latitude 10.78 --longitude 106.70 --offline`, sau đó bấm huấn luyện Holt–Winters.
+
+Holt–Winters cộng tính dự báo trước một giờ với chu kỳ 24 giờ, dùng từ 72 đến 168 giờ nhiệt độ liên tiếp. Mỗi dự báo khi kiểm thử chỉ dùng thông tin đã có ở giờ liền trước. MAE và RMSE của Holt–Winters, Random Forest và phương pháp giữ nguyên nhiệt độ được tính trên cùng các mốc ERA5. Bảng dùng toàn bộ mốc chung. Biểu đồ hiển thị tối đa 72 mốc kiểm thử cuối. Dự báo trong ứng dụng dùng chuỗi nhiệt độ gần hiện tại từ Open-Meteo.
+
+**Gradient Boosting** dùng `HistGradientBoostingRegressor` với cùng 25 đặc trưng đầu vào và tập kiểm thử như Random Forest. Chọn đúng mục trong thanh bên để xem dự báo và bảng so sánh.
+
+**Chronos‑2 Small** chạy dự báo trên CPU từ checkpoint đã huấn luyện sẵn. Khung này hiển thị nhiệt độ trung vị và khoảng P10–P90. **Hỏi đáp thời tiết** chạy Qwen2.5‑0.5B‑Instruct trên máy, sử dụng dữ liệu Open-Meteo của địa điểm đang chọn. Hai mục này dùng Python 3.12 hoặc 3.13 và cần cài thêm thư viện một lần. Trên Windows, có thể dùng bản PyTorch CPU như sau.
+
+```powershell
+python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.8.0
+python -m pip install -r requirements-ai.txt
+python app.py
+```
+
+Trong app, bấm **Chạy dự báo** ở Chronos hoặc **Tải mô hình và kiểm thử** khi địa điểm chưa có kết quả. Ở mục Hỏi đáp thời tiết, bấm nút bật trợ lý rồi nhập câu hỏi. Lần sử dụng đầu tiên cần Internet để tải trọng số Chronos khoảng 112 MB hoặc Qwen khoảng 988 MB. Các lần sau dùng bộ nhớ đệm trong `models/ai-cache/`. Hai mô hình chạy tại máy của bạn và dùng được mà không cần API key.
+
+Với câu hỏi mang ô, ứng dụng đối chiếu câu trả lời của Qwen với xác suất mưa cao nhất và giờ tương ứng trong khung thời gian được hỏi. Nếu lời khuyên hoặc số liệu không khớp, ứng dụng hiển thị gợi ý tính từ dữ liệu Open-Meteo.
+
+Kết quả dự báo trước một giờ trên cùng 1.747 mốc ERA5 tại TP.HCM.
+
+| Phương pháp | MAE (°C) | RMSE (°C) |
+| --- | ---: | ---: |
+| Random Forest | 0,347 | 0,512 |
+| Holt–Winters | 0,436 | 0,609 |
+| Gradient Boosting | 0,347 | 0,520 |
+| Chronos‑2 Small | 0,381 | 0,533 |
 
 ### Các lựa chọn
 
@@ -104,7 +133,7 @@ npm.cmd ci
 npm.cmd run dev -- --port 5174
 ```
 
-Mở URL Vite in ra, sửa `src/`, bấm Ctrl+S để xem thay đổi. Cổng 5174 tránh trùng server Python mặc định 5173. Có thể dừng Python khi chỉ dùng chế độ dev. Trên macOS/Linux thay `npm.cmd` bằng `npm`.
+Mở URL Vite in ra, sửa `src/`, bấm Ctrl+S để xem thay đổi. Để gọi API các mô hình trong chế độ dev, giữ `python app.py` ở cổng 5173 và đặt `$env:MAYVIET_API_PORT = '5173'` trong terminal trước khi khởi động Vite ở cổng 5174. Trên macOS/Linux dùng `npm` và `MAYVIET_API_PORT=5173 npm run dev -- --port 5174`.
 
 Sau khi sửa giao diện, kiểm tra rồi build:
 
@@ -143,7 +172,7 @@ Không cần npm hoặc pip để chạy 18 bài kiểm tra Python này. Chúng 
 | `tsconfig.json`                      | Quy tắc kiểm tra kiểu TypeScript                                      | Đọc mục 15 trước khi sửa            |
 | `package.json`                       | Thư viện, phiên bản và các lệnh npm                                   | Khi thay phụ thuộc/lệnh chạy        |
 | `package-lock.json`                  | Khóa cây phiên bản phụ thuộc để cài lặp lại được                      | Để npm cập nhật, không sửa tay      |
-| `requirements.txt`                   | Giải thích không cần gói pip ngoài thư viện chuẩn                     | Không cần cài gì từ file này        |
+| `requirements.txt`                   | Thư viện Python cho Random Forest và Holt–Winters                    | Cài bằng `python -m pip install -r requirements.txt` |
 | `dist/`                              | Kết quả build để chạy ngay                                            | Không sửa tay; build lại từ `src/`  |
 
 `node_modules/` không được đóng gói vì lớn và có thể tạo lại bằng `npm.cmd ci`. Các file trong `dist/assets/` đã được tối ưu, nên học và đọc chú thích trong `src/` thay vì đọc bundle.
@@ -193,7 +222,7 @@ Bản này dùng **Python cho máy chủ cục bộ**, React/TypeScript cho giao
 6. Giao diện đọc `current`, `hourly`, `daily`. `HourlyForecast` dùng `getHourlyTimeline()` để lấy từng mốc liên tiếp.
 7. Khi chọn giờ/ngày/đơn vị, React cập nhật hiển thị từ dữ liệu đã tải; không gọi API riêng cho từng giờ.
 
-`app.py` gửi file HTML/JS/CSS/font cho trình duyệt. **Yêu cầu Open-Meteo đi trực tiếp từ trình duyệt**, không được chuyển qua máy chủ Python. Cách này giữ nguyên cơ chế lấy dữ liệu hiện có. Dữ liệu mới cần Internet dù giao diện chạy bằng localhost; server không đọc CSV hoặc dựng số liệu ngẫu nhiên.
+`app.py` gửi HTML, JS, CSS và font cho trình duyệt. Trình duyệt gọi Open-Meteo Forecast API để lấy thời tiết hiện tại, dự báo và dữ liệu đầu vào gần nhất cho các mô hình. Python dùng Open-Meteo Historical Weather API khi cần tải thêm lịch sử ERA5 để huấn luyện hoặc kiểm thử. Lịch sử được lưu theo địa điểm trong `data/history/`.
 
 ## 7. API lấy từ đâu và gọi chỗ nào?
 

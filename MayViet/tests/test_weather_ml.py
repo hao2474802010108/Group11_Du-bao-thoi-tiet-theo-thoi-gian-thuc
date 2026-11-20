@@ -133,7 +133,7 @@ class ModelTests(unittest.TestCase):
     # [RF-TEST-009] Metadata khác phiên bản sklearn không được nạp; CSV lịch sử vẫn có thể dùng để refit.
     def test_incompatible_model_is_not_unpickled(self):
         p = self.service.paths(self.key)["report"]
-        report = json.loads(p.read_text())
+        report = json.loads(p.read_text(encoding="utf-8"))
         report["sklearn_version"] = "0.0-incompatible"
         p.write_text(json.dumps(report))
         with patch.object(ml.joblib, "load") as loader:
@@ -233,6 +233,40 @@ class MLHTTPTests(unittest.TestCase):
         self.assertEqual(status, 200)
         result = json.loads(data)
         self.assertAlmostEqual(result["temperature"], result["input_temperature"] + result["delta"])
+
+    def test_time_series_train_and_predict(self):
+        service = self.server.ml_service
+        key, _, _ = ml.location(10.78, 106.7)
+        service.save_history(key, self.rows, {"provider": "UNIT TEST", "url": "https://example.invalid"})
+        _, source = service.history(key)
+        service.persist(key, {**self.artifact, "report": {**self.artifact["report"], "source": source}})
+        path = "/api/time-series/status?latitude=10.78&longitude=106.7"
+        coordinates = {"latitude": 10.78, "longitude": 106.7}
+
+        status, _, body = self.request("GET", path)
+        self.assertEqual(status, 200)
+        self.assertEqual(json.loads(body)["state"], "idle")
+        status, _, _ = self.request("POST", "/api/time-series/train", coordinates)
+        self.assertEqual(status, 200)
+        deadline = time.monotonic() + 10
+        while time.monotonic() < deadline:
+            status, _, body = self.request("GET", path)
+            self.assertEqual(status, 200)
+            reply = json.loads(body)
+            if reply["state"] != "training":
+                break
+            time.sleep(0.05)
+        self.assertEqual(reply["state"], "ready", reply["message"])
+        self.assertEqual(reply["model"]["test_samples"], len(self.artifact["holdout"]))
+        self.assertAlmostEqual(reply["model"]["random_forest"]["mae"], self.artifact["report"]["metrics"]["mae"])
+
+        self.server.series_service = None
+        context = payload(self.rows[33:201], self.rows[200]["time"])
+        status, _, body = self.request("POST", "/api/time-series/predict", {**coordinates, "context": context})
+        self.assertEqual(status, 200, body)
+        prediction = json.loads(body)
+        self.assertEqual(prediction["target_time"], self.rows[201]["time"])
+        self.assertAlmostEqual(prediction["temperature"], prediction["input_temperature"] + prediction["delta"])
 
     def test_bad_request_and_unknown_route(self):
         self.assertEqual(self.request("GET", "/api/ml/status?latitude=NaN&longitude=106")[0], 400)

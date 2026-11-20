@@ -1,6 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { fetchModelContext, modelInput } from "../src/lib/weather-client.ts";
+import {
+  fetchModelContext,
+  fetchTimeSeriesInput,
+  modelInput,
+} from "../src/lib/weather-client.ts";
 
 // [RF-JS-TEST-001] Chuỗi giả chỉ dùng để kiểm tra cắt mốc thời gian, không phải dataset của ứng dụng.
 function fixture() {
@@ -56,6 +60,34 @@ test("RF input request uses past days without shifting the main daily forecast a
     await fetchModelContext(10.7788, 106.7011);
     await fetchModelContext(10.7788, 106.7011, true);
     assert.equal(calls, 1);
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
+test("time-series input only sends past hourly temperatures through the reference hour", async () => {
+  const original = globalThis.fetch;
+  const data = fixture();
+  const temperatures = data.hourly.temperature_2m.slice();
+  temperatures[46] = null;
+  globalThis.fetch = async (url) => {
+    const params = new URL(url).searchParams;
+    assert.equal(params.get("past_days"), "7");
+    assert.equal(params.get("forecast_days"), "1");
+    assert.equal(params.get("hourly"), "temperature_2m");
+    assert.equal(params.has("daily"), false);
+    return Response.json({
+      current: data.current,
+      hourly: { time: data.hourly.time, temperature_2m: temperatures },
+    });
+  };
+  try {
+    const result = await fetchTimeSeriesInput(10.78, 106.70);
+    assert.equal(result.as_of, "2025-01-02T23:00");
+    assert.deepEqual(result.hourly, {
+      time: data.hourly.time.slice(0, 48),
+      temperature_2m: temperatures.slice(0, 48),
+    });
   } finally {
     globalThis.fetch = original;
   }

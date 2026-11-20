@@ -51,12 +51,13 @@ export type MLPrediction = {
 export async function mlRequest<T>(
   path: string,
   init: RequestInit = {},
+  timeoutMs = 15_000,
 ): Promise<T> {
   const controller = new AbortController();
   const abort = () => controller.abort();
   if (init.signal?.aborted) controller.abort();
   init.signal?.addEventListener("abort", abort, { once: true });
-  const timer = setTimeout(abort, 15_000);
+  const timer = setTimeout(abort, timeoutMs);
   try {
     const response = await fetch(path, {
       ...init,

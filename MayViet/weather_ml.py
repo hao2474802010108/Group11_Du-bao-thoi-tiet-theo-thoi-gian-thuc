@@ -407,7 +407,7 @@ class MLService:
         return result
 
     # [RF-024] Khóa ngăn hai lượt train cùng lúc. Tác vụ chạy nền nên trang và dự báo API vẫn sử dụng được.
-    def start_training(self, latitude: object, longitude: object) -> dict:
+    def start_training(self, latitude: object, longitude: object, *, prefer_local_history: bool = False) -> dict:
         key, lat, lon = location(latitude, longitude)
         with self.lock:
             if self.active == key:
@@ -419,20 +419,28 @@ class MLService:
                 return self.status(lat, lon)
             self.active = key
             self.jobs[key] = {"state": "training", "message": "Đang chuẩn bị dữ liệu lịch sử 365 ngày…"}
-        threading.Thread(target=self._train_job, args=(key, lat, lon), daemon=True).start()
+        threading.Thread(target=self._train_job, args=(key, lat, lon, prefer_local_history), daemon=True).start()
         return self.status(lat, lon)
 
-    def _train_job(self, key: str, lat: float, lon: float) -> None:
+    def _train_job(self, key: str, lat: float, lon: float, prefer_local_history: bool) -> None:
         try:
             notice = ""
-            try:
-                rows, source = self.download_history(lat, lon)
-            except (ValueError, OSError) as error:
-                # [RF-025] Chỉ fallback sang lịch sử thật đã lưu, ghi rõ dữ liệu cũ; không tạo số liệu ngẫu nhiên.
-                if not self.paths(key)["history"].is_file():
-                    raise error
-                rows, source = self.history(key)
-                notice = f" Dùng lịch sử đã lưu vì nguồn chưa cập nhật được ({error})."
+            prepared = None
+            if prefer_local_history:
+                try:
+                    prepared = self.history(key)
+                except (OSError, ValueError, KeyError):
+                    pass
+            if prepared is None:
+                try:
+                    prepared = self.download_history(lat, lon)
+                except (ValueError, OSError) as error:
+                    # [RF-025] Nếu nguồn trực tuyến lỗi, dùng lịch sử thật đã lưu.
+                    if not self.paths(key)["history"].is_file():
+                        raise error
+                    prepared = self.history(key)
+                    notice = f" Dùng lịch sử đã lưu vì nguồn chưa cập nhật được ({error})."
+            rows, source = prepared
             with self.lock:
                 self.jobs[key] = {"state": "training", "message": "Đang fit Random Forest và kiểm thử 20% cuối theo thời gian…"}
             artifact = fit_model(rows, lat, lon, source)

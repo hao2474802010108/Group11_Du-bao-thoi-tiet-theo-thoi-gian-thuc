@@ -14,10 +14,12 @@ MÂY VIỆT — MỞ BẰNG PYTHON TRÊN LAPTOP
 Mở VS Code > File > Open Folder > chọn MayViet > Terminal > New Terminal.
 Nhập:
 
+python -m pip install -r requirements.txt
 python app.py
 
 Nếu Windows không nhận lệnh python nhưng có Python Launcher, dùng:
 
+py -m pip install -r requirements.txt
 py app.py
 
 Trình duyệt tự mở. Nếu chưa mở, nhập URL terminal in ra, thường là:
@@ -26,9 +28,21 @@ http://localhost:5173
 Giữ terminal đang mở trong lúc dùng. Nhấn Ctrl+C để dừng.
 Nếu cổng 5173 bận, ứng dụng thử thêm 10 cổng; dùng đúng URL được in ra.
 
-Không cần BAT, Node.js, npm, Flask hay cài gói pip để xem bản này.
-requirements.txt chỉ là ghi chú vì app.py dùng thư viện chuẩn Python.
+Dùng Random Forest, Time Series và Gradient Boosting trong thanh điều hướng để
+dự báo nhiệt độ giờ kế tiếp và xem kết quả kiểm thử. Bấm Huấn luyện cho địa điểm mới.
+Dùng Python 3.12 trở lên để nạp mô hình Random Forest TP.HCM đã đi kèm.
 Dữ liệu dự báo mới vẫn cần Internet; GPS cần quyền trình duyệt/hệ điều hành.
+
+CHRONOS VÀ HỎI ĐÁP THỜI TIẾT
+
+Với Python 3.12 hoặc 3.13, cài thêm một lần bằng:
+
+python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.8.0
+python -m pip install -r requirements-ai.txt
+python app.py
+
+Lần đầu bấm dùng từng mục, app tải trọng số (Chronos khoảng 112 MB,
+Qwen khoảng 988 MB). Dùng được trên CPU và không cần API key.
 
 3. TÙY CHỌN
 
@@ -68,6 +82,9 @@ Không cần Node để mở app.py thông thường.
 
 npm.cmd ci
 npm.cmd run dev -- --port 5174
+
+Để dùng hai mô hình qua Vite, chạy python app.py trong terminal riêng và
+đặt $env:MAYVIET_API_PORT = '5173' trước khi chạy npm.cmd run dev.
 
 Sửa src, lưu để xem thay đổi ở URL Vite in ra. Sau đó:
 

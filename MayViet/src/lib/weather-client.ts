@@ -6,6 +6,7 @@ import type { CityWeather, Forecast, Place } from "./weather";
 const REFRESH_MS = 15 * 60_000;
 // [API-003] Làm mới thủ công vẫn dùng cache nếu dữ liệu mới nhận chưa đủ 30 giây, tránh bấm liên tục gọi API.
 const MIN_REFRESH_MS = 30_000;
+const FORECAST_API = "https://api.open-meteo.com/v1/forecast?";
 // [API-004] Tiền tố cho khóa localStorage của tầng API, giúp phân biệt với cài đặt và yêu thích.
 const PREFIX = "may-viet-direct-v1:";
 // [API-005] Cache là cặp giá trị + thời điểm nhận (mili giây). T là kiểu tổng quát: dùng được cho dự báo, thành phố và tìm kiếm.
@@ -161,8 +162,7 @@ async function publicJson<T>(
   }
 }
 
-// [API-025] Dựng URL dự báo từ tọa độ. URLSearchParams mã hóa tham số; timezone cố định GMT+7, lấy 7 ngày.
-export function forecastUrl(latitude: number, longitude: number) {
+function forecastLocation(latitude: number, longitude: number) {
   if (
     !Number.isFinite(latitude) ||
     !Number.isFinite(longitude) ||
@@ -172,13 +172,19 @@ export function forecastUrl(latitude: number, longitude: number) {
     longitude > 118
   )
     throw new DataError("Vị trí phải nằm trong khu vực Việt Nam.");
+  return {
+    latitude: String(latitude),
+    longitude: String(longitude),
+    timezone: "Asia/Ho_Chi_Minh",
+  };
+}
+
+// [API-025] Dựng URL dự báo từ tọa độ. URLSearchParams mã hóa tham số; timezone cố định GMT+7, lấy 7 ngày.
+export function forecastUrl(latitude: number, longitude: number) {
   return (
-    "https://api.open-meteo.com/v1/forecast?" +
+    FORECAST_API +
     new URLSearchParams({
-      latitude: String(latitude),
-      longitude: String(longitude),
-      // [API-043] Yêu cầu API trả thời gian địa phương Việt Nam; các chuỗi hourly.time không cần đổi sang múi giờ laptop.
-      timezone: "Asia/Ho_Chi_Minh",
+      ...forecastLocation(latitude, longitude),
       forecast_days: "7",
       // [API-044] Nhóm giá trị hiện tại: nhiệt độ, độ ẩm, cảm nhận, ngày/đêm, mưa, mây, áp suất và gió.
       current:
@@ -207,6 +213,112 @@ export async function fetchForecast(
   );
   return { ...value, fetchedAt: new Date(receivedAt).toISOString() };
 }
+
+type HourlyContext<Field extends string> = { time: string[] } & Record<
+  Field,
+  (number | null)[]
+>;
+type ContextForecast<Field extends string> = {
+  current: { time: string };
+  hourly: HourlyContext<Field>;
+};
+
+const RF_FIELDS = [
+  "temperature_2m",
+  "relative_humidity_2m",
+  "surface_pressure",
+  "wind_speed_10m",
+  "cloud_cover",
+] as const;
+type RFField = (typeof RF_FIELDS)[number];
+
+async function fetchHourlyContext<Field extends string>(
+  latitude: number,
+  longitude: number,
+  fields: readonly Field[],
+  pastDays: number,
+  forecastDays: number,
+  force: boolean,
+): Promise<ContextForecast<Field>> {
+  const params = new URLSearchParams({
+    ...forecastLocation(latitude, longitude),
+    current: "temperature_2m",
+    hourly: fields.join(","),
+    past_days: String(pastDays),
+    forecast_days: String(forecastDays),
+  });
+  const { value } = await publicJson<ContextForecast<Field>>(
+    FORECAST_API + params,
+    REFRESH_MS,
+    force,
+    (data) =>
+      typeof data?.current?.time === "string" &&
+      Array.isArray(data.hourly?.time) &&
+      data.hourly.time.length > 0 &&
+      fields.every(
+        (field) =>
+          Array.isArray(data.hourly[field]) &&
+          data.hourly[field].length === data.hourly.time.length,
+      ),
+  );
+  return value;
+}
+
+function contextAnchor(data: ContextForecast<"temperature_2m">) {
+  // Open-Meteo trả thời gian Việt Nam cho cả mốc hiện tại và mảng theo giờ.
+  const asOf = `${data.current.time.slice(0, 13)}:00`;
+  const index = data.hourly.time.indexOf(asOf);
+  if (index < 0 || data.hourly.time.slice(0, index).some((time) => time >= asOf))
+    throw new DataError("Thiếu dữ liệu nhiệt độ tại mốc giờ hiện tại.");
+  return { asOf, end: index + 1 };
+}
+
+export function fetchModelContext(latitude: number, longitude: number, force = false) {
+  return fetchHourlyContext(latitude, longitude, RF_FIELDS, 3, 2, force);
+}
+
+export async function fetchChronosInput(latitude: number, longitude: number, force = false) {
+  const forecast = await fetchHourlyContext(latitude, longitude, RF_FIELDS, 7, 1, force);
+  return modelInput(forecast).context;
+}
+
+export function modelInput(data: ContextForecast<RFField>) {
+  const { asOf, end } = contextAnchor(data);
+  const { hourly } = data;
+  return {
+    context: {
+      as_of: asOf,
+      hourly: {
+        time: hourly.time.slice(0, end),
+        temperature_2m: hourly.temperature_2m.slice(0, end),
+        relative_humidity_2m: hourly.relative_humidity_2m.slice(0, end),
+        surface_pressure: hourly.surface_pressure.slice(0, end),
+        wind_speed_10m: hourly.wind_speed_10m.slice(0, end),
+        cloud_cover: hourly.cloud_cover.slice(0, end),
+      },
+    },
+    // Giá trị giờ tiếp theo chỉ để đối chiếu trên giao diện.
+    apiTarget: hourly.time[end] ?? null,
+    apiNext: hourly.temperature_2m[end] ?? null,
+  };
+}
+
+export async function fetchTimeSeriesInput(
+  latitude: number,
+  longitude: number,
+  force = false,
+) {
+  const data = await fetchHourlyContext(latitude, longitude, ["temperature_2m"], 7, 1, force);
+  const { asOf, end } = contextAnchor(data);
+  return {
+    as_of: asOf,
+    hourly: {
+      time: data.hourly.time.slice(0, end),
+      temperature_2m: data.hourly.temperature_2m.slice(0, end),
+    },
+  };
+}
+
 // [API-027] Mô tả phần JSON tối thiểu cần đọc khi lấy tóm tắt nhiều thành phố cùng lúc.
 type RawCity = {
   current: {
@@ -229,7 +341,7 @@ export async function fetchCities(
     forecast_days: "1",
   });
   const { value, receivedAt } = await publicJson<RawCity[]>(
-    `https://api.open-meteo.com/v1/forecast?${params}`,
+    FORECAST_API + params,
     REFRESH_MS,
     force,
     (v) =>

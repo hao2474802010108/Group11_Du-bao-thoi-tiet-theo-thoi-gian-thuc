@@ -3,7 +3,7 @@
 """Mây Việt: chạy giao diện hiện tại bằng Python, không cần file BAT.
 
 Cách chạy: python app.py
-Yêu cầu: Python 3.10 trở lên; chỉ dùng thư viện chuẩn, không cần pip install.
+Yêu cầu: Python 3.10 trở lên. Cài requirements.txt để dùng các mục mô hình dự báo.
 Giữ nguyên thư mục dist cạnh app.py vì đó là giao diện đã được biên dịch.
 """
 
@@ -15,8 +15,10 @@ from __future__ import annotations
 import argparse
 # [PY-003] errno giúp nhận biết lỗi cổng đang được chương trình khác sử dụng.
 import errno
+import json
 # [PY-004] mimetypes tìm Content-Type cho những loại tài nguyên chưa có trong bảng riêng.
 import mimetypes
+import os
 # [PY-005] socket cung cấp tùy chọn giữ cổng độc quyền trên Windows, tránh hai ứng dụng dùng nhầm cùng cổng.
 import socket
 # [PY-006] sys đọc phiên bản Python, in lỗi ra stderr và trả mã kết thúc chương trình.
@@ -29,10 +31,11 @@ import webbrowser
 from http import HTTPStatus
 # [PY-010] Handler xử lý từng yêu cầu; ThreadingHTTPServer phục vụ nhiều file đồng thời.
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from functools import partial
 # [PY-011] Path xử lý đường dẫn có dấu/khoảng trắng; PurePosixPath đọc đường dẫn trong URL.
 from pathlib import Path, PurePosixPath
 # [PY-012] Tách phần đường dẫn khỏi query và giải mã các ký tự phần trăm trong URL.
-from urllib.parse import unquote, urlsplit
+from urllib.parse import parse_qs, unquote, urlsplit
 
 
 # 2. THƯ MỤC VÀ THÔNG SỐ MẶC ĐỊNH
@@ -46,6 +49,25 @@ HOST = "127.0.0.1"
 DEFAULT_PORT = 5173
 # [PY-017] Nếu cổng bận, thử thêm 10 cổng tiếp theo thay vì đóng ứng dụng ngay.
 EXTRA_PORTS = 10
+MAX_MODEL_BODY = 1_000_000
+MODEL_ROUTES = {
+    "/api/ml/status": ("GET", "rf", "status"),
+    "/api/ml/train": ("POST", "rf", "start_training"),
+    "/api/ml/predict": ("POST", "rf", "predict"),
+    "/api/ml/export": ("GET", "rf", "export"),
+    "/api/time-series/status": ("GET", "series", "status"),
+    "/api/time-series/train": ("POST", "series", "start_training"),
+    "/api/time-series/predict": ("POST", "series", "predict"),
+    "/api/gradient-boosting/status": ("GET", "boosting", "status"),
+    "/api/gradient-boosting/train": ("POST", "boosting", "start_training"),
+    "/api/gradient-boosting/predict": ("POST", "boosting", "predict"),
+    "/api/chronos/status": ("GET", "chronos", "status"),
+    "/api/chronos/train": ("POST", "chronos", "start_training"),
+    "/api/chronos/predict": ("POST", "chronos", "predict"),
+    "/api/weather-assistant/status": ("GET", "assistant", "status"),
+    "/api/weather-assistant/prepare": ("POST", "assistant", "prepare"),
+    "/api/weather-assistant/ask": ("POST", "assistant", "ask"),
+}
 
 # [PY-018] Khai báo MIME rõ cho JS/CSS/font để tránh Windows nhận sai kiểu JavaScript.
 CONTENT_TYPES = {
@@ -90,13 +112,19 @@ class WeatherRequestHandler(BaseHTTPRequestHandler):
 
     # [PY-026] GET lấy nội dung file, dùng khi trình duyệt tải trang và các tài nguyên.
     def do_GET(self) -> None:
-        self._serve_file(head_only=False)
+        if not self._handle_model_route("GET"):
+            self._serve_file(head_only=False)
 
     # [PY-027] HEAD chỉ trả header, không gửi nội dung; hữu ích khi kiểm tra tài nguyên.
     def do_HEAD(self) -> None:
-        self._serve_file(head_only=True)
+        if not self._handle_model_route("GET", head_only=True):
+            self._serve_file(head_only=True)
 
-    # [PY-028] Máy chủ này chỉ đọc file; các phương thức ghi không có chức năng và trả 405.
+    # [PY-028] POST chỉ dành cho huấn luyện và dự báo, không sửa tệp giao diện.
+    def do_POST(self) -> None:
+        if not self._handle_model_route("POST"):
+            self._method_not_allowed()
+
     def _method_not_allowed(self) -> None:
         self.send_response(HTTPStatus.METHOD_NOT_ALLOWED)
         self.send_header("Allow", "GET, HEAD")
@@ -104,7 +132,142 @@ class WeatherRequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     # [PY-029] Dùng lại cùng một hàm cho những phương thức không hỗ trợ, tránh lặp code.
-    do_POST = do_PUT = do_PATCH = do_DELETE = do_OPTIONS = do_TRACE = _method_not_allowed
+    do_PUT = do_PATCH = do_DELETE = do_OPTIONS = do_TRACE = _method_not_allowed
+
+    def _ml_service(self):
+        with self.server.models_lock:
+            if self.server.ml_service is None:
+                from weather_ml import MLService
+
+                self.server.ml_service = MLService(self.server.directory.parent)
+            return self.server.ml_service
+
+    def _series_service(self):
+        with self.server.models_lock:
+            if self.server.series_service is None:
+                from time_series_service import TimeSeriesService
+
+                self.server.series_service = TimeSeriesService(self._ml_service())
+            return self.server.series_service
+
+    def _model_service(self, group: str):
+        if group == "rf":
+            return self._ml_service()
+        if group == "series":
+            return self._series_service()
+        with self.server.models_lock:
+            service = self.server.forecast_services.get(group)
+            if service is not None:
+                return service
+            root = self.server.directory.parent
+            if group in {"assistant", "chronos"}:
+                os.environ.setdefault("HF_HUB_DISABLE_XET", "1")
+                os.environ.setdefault("HF_HUB_DOWNLOAD_TIMEOUT", "60")
+            if group == "assistant":
+                from weather_assistant import WeatherAssistant
+
+                service = WeatherAssistant(root)
+            else:
+                from time_series_service import TimeSeriesService
+
+                if group == "boosting":
+                    import weather_boosting as provider
+
+                    service = TimeSeriesService(
+                        self._ml_service(), slug="gradient-boosting", name="Gradient Boosting",
+                        builder=provider.build_report, predictor=provider.predict_next, store_estimator=True,
+                    )
+                else:
+                    import weather_chronos as provider
+
+                    cache_dir = root / "models" / "ai-cache"
+                    service = TimeSeriesService(
+                        self._ml_service(), slug="chronos", name="Chronos‑2 Small",
+                        builder=partial(provider.build_report, cache_dir=cache_dir),
+                        predictor=partial(provider.predict_next, cache_dir=cache_dir, allow_download=True),
+                        runtime_check=provider.check_runtime, training_verb="kiểm thử", report_progress=True,
+                    )
+            self.server.forecast_services[group] = service
+            return service
+
+    def _send_json(self, status: int, data: dict, head_only: bool = False) -> None:
+        content = json.dumps(data, ensure_ascii=False, allow_nan=False).encode("utf-8")
+        self._send_content(status, "application/json; charset=utf-8", content, head_only)
+
+    def _read_model_body(self) -> dict:
+        if self.headers.get_content_type() != "application/json":
+            raise ModelRequestError(HTTPStatus.UNSUPPORTED_MEDIA_TYPE, "Yêu cầu phải là JSON.")
+        try:
+            length = int(self.headers.get("Content-Length", ""))
+        except ValueError as error:
+            raise ValueError("Thiếu kích thước yêu cầu hợp lệ.") from error
+        if length > MAX_MODEL_BODY:
+            raise ModelRequestError(HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "Yêu cầu quá lớn.")
+        if length <= 0:
+            raise ValueError("Yêu cầu phải chứa đối tượng JSON.")
+        try:
+            body = json.loads(self.rfile.read(length))
+        except (UnicodeError, json.JSONDecodeError) as error:
+            raise ValueError("Nội dung JSON không hợp lệ.") from error
+        if not isinstance(body, dict):
+            raise ValueError("Yêu cầu phải chứa đối tượng JSON.")
+        return body
+
+    def _handle_model_route(self, method: str, head_only: bool = False) -> bool:
+        if not self.path.startswith("/api/"):
+            return False
+        try:
+            url = urlsplit(self.path)
+            route = MODEL_ROUTES.get(url.path)
+            if route is None:
+                raise ModelRequestError(HTTPStatus.NOT_FOUND, "Không tìm thấy API mô hình.")
+            allowed, group, action = route
+            if method != allowed:
+                self._send_content(HTTPStatus.METHOD_NOT_ALLOWED, "application/json; charset=utf-8",
+                                   b"{}", head_only, {"Allow": "GET, HEAD" if allowed == "GET" else "POST"})
+                return True
+            host = self.headers.get("Host", "").lower()
+            if not host or urlsplit(f"http://{host}").hostname not in {"localhost", HOST}:
+                raise ModelRequestError(HTTPStatus.FORBIDDEN, "API mô hình chỉ dùng trên máy này.")
+            origin = self.headers.get("Origin")
+            if origin and origin.lower() != f"http://{host}":
+                raise ModelRequestError(HTTPStatus.FORBIDDEN, "Yêu cầu mô hình phải đến từ chính trang Mây Việt.")
+            if method == "POST":
+                body = self._read_model_body()
+            else:
+                body = {key: values[0] for key, values in parse_qs(url.query).items()}
+            coords = (body.get("latitude"), body.get("longitude"))
+            service = self._model_service(group)
+            if group == "assistant":
+                result = service.ask(body) if action == "ask" else getattr(service, action)()
+            elif action == "predict":
+                context = body.get("context")
+                if not isinstance(context, dict):
+                    raise ValueError("Thiếu dữ liệu theo giờ để dự báo.")
+                result = service.predict(*coords, context)
+            elif action == "export":
+                name, csv_content = service.export(*coords)
+                self._send_content(HTTPStatus.OK, "text/csv; charset=utf-8", csv_content, head_only,
+                                   {"Content-Disposition": f'attachment; filename="{name}"'})
+                return True
+            else:
+                result = getattr(service, action)(*coords)
+            self._send_json(HTTPStatus.OK, result, head_only)
+        except ModelRequestError as error:
+            self._send_json(error.status, {"error": str(error)}, head_only)
+        except ValueError as error:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": str(error)}, head_only)
+        except ImportError as error:
+            detail = str(error) if "requirements-ai.txt" in str(error) else ""
+            self._send_json(HTTPStatus.SERVICE_UNAVAILABLE, {
+                "state": "missing_dependencies",
+                "error": detail or "Cài thư viện cho mô hình bằng python -m pip install -r requirements.txt.",
+            }, head_only)
+        except (OSError, RuntimeError) as error:
+            self.log_error("Lỗi API mô hình: %s", error)
+            self._send_json(HTTPStatus.INTERNAL_SERVER_ERROR,
+                            {"error": "Chưa đọc được dữ liệu mô hình. Hãy thử lại."}, head_only)
+        return True
 
     # [PY-030] Đổi URL thành file hợp lệ dưới dist; trả None nếu đã gửi phản hồi lỗi.
     def _requested_file(self) -> Path | None:
@@ -160,9 +323,15 @@ class WeatherRequestHandler(BaseHTTPRequestHandler):
         if content_type is None:
             content_type = mimetypes.guess_type(str(file_path))[0] or "application/octet-stream"
         # [PY-045] 200 nghĩa là tải thành công; Content-Length là số byte, không phải số ký tự.
-        self.send_response(HTTPStatus.OK)
+        self._send_content(HTTPStatus.OK, content_type, content, head_only)
+
+    def _send_content(self, status: int, content_type: str, content: bytes, head_only: bool,
+                      headers: dict[str, str] | None = None) -> None:
+        self.send_response(status)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(content)))
+        for name, value in (headers or {}).items():
+            self.send_header(name, value)
         self.end_headers()
         # [PY-046] HEAD có cùng kích thước/header với GET nhưng không gửi thân phản hồi.
         if not head_only:
@@ -176,6 +345,12 @@ class WeatherRequestHandler(BaseHTTPRequestHandler):
     def log_message(self, format: str, *args: object) -> None:
         if self.server.verbose:
             super().log_message(format, *args)
+
+
+class ModelRequestError(Exception):
+    def __init__(self, status: int, message: str) -> None:
+        super().__init__(message)
+        self.status = status
 
 
 # [PY-049] ThreadingHTTPServer cho phép trình duyệt tải JS, CSS và font đồng thời.
@@ -192,6 +367,10 @@ class MayVietServer(ThreadingHTTPServer):
     def __init__(self, port: int, directory: Path, verbose: bool = False) -> None:
         self.directory = directory.resolve()
         self.verbose = verbose
+        self.models_lock = threading.RLock()
+        self.ml_service = None
+        self.series_service = None
+        self.forecast_services = {}
         super().__init__((HOST, port), WeatherRequestHandler)
 
     # [PY-053] Windows đặt cờ độc quyền TRƯỚC bind; các hệ điều hành khác dùng cách bind của lớp cha.

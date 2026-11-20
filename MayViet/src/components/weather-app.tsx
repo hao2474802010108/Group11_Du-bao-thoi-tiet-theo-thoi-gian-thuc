@@ -10,6 +10,7 @@ import {
   ArrowDown,
   ArrowRight,
   ArrowUp,
+  BrainCircuit,
   Check,
   ChevronDown,
   ChevronRight,
@@ -25,12 +26,14 @@ import {
   Eye,
   Heart,
   Info,
+  Layers,
   LayoutGrid,
   Leaf,
   LoaderCircle,
   LocateFixed,
   MapPin,
   Menu,
+  MessageCircle,
   Moon,
   Navigation,
   Plus,
@@ -38,11 +41,13 @@ import {
   Search,
   ShieldCheck,
   SlidersHorizontal,
+  Sparkles,
   Star,
   Sun,
   Sunrise,
   Sunset,
   Thermometer,
+  TrendingUp,
   Umbrella,
   Wind,
   X,
@@ -74,6 +79,9 @@ import {
 } from "@/lib/weather-client";
 // [APP-007] Tách biểu đồ và các thẻ từng giờ thành component riêng để dễ đọc và bảo trì.
 import HourlyForecast from "@/components/hourly-forecast";
+import RandomForestPanel from "@/components/random-forest-panel";
+import TimeSeriesPanel from "@/components/time-series-panel";
+import WeatherAssistantPanel from "@/components/weather-assistant-panel";
 
 // [APP-008] Chỉ cho phép C hoặc F làm đơn vị hiển thị; dữ liệu gốc vẫn dùng °C.
 type Unit = "C" | "F";
@@ -522,19 +530,22 @@ export default function WeatherApp() {
     );
     setToast(saved ? `Đã bỏ lưu ${p.name}` : `Đã lưu ${p.name} vào yêu thích`);
   }
-  // [APP-065] Đổi màn hình tổng quan/đã lưu; mục Dự báo cuộn đến vùng #weekly sau khi vùng đó được render.
-  function navigate(destination: "overview" | "forecast" | "saved") {
+  // [APP-065] Mở màn hình đã chọn, rồi cuộn đến mục dự báo nếu có.
+  function navigate(
+    destination: "overview" | "saved" | "weekly" | "random-forest" | "time-series"
+      | "gradient-boosting" | "chronos" | "weather-assistant",
+  ) {
     setMobileMenu(false);
     setView(destination === "saved" ? "saved" : "overview");
-    if (destination === "forecast")
-      setTimeout(
-        () =>
-          document
-            .getElementById("weekly")
-            ?.scrollIntoView({ behavior: "smooth", block: "start" }),
-        60,
-      );
-    else window.scrollTo({ top: 0, behavior: "smooth" });
+    if (destination === "overview" || destination === "saved") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    setTimeout(() => {
+      document
+        .getElementById(destination)
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 60);
   }
   // [APP-066] Hỗ trợ bàn phím trong tìm kiếm: ↑/↓ chọn kết quả, Enter mở địa điểm.
   function onSearchKey(e: KeyboardEvent<HTMLInputElement>) {
@@ -717,9 +728,29 @@ export default function WeatherApp() {
             <span>Tổng quan</span>
             <span className="nav-dot" />
           </button>
-          <button className="nav-item" onClick={() => navigate("forecast")}>
+          <button className="nav-item" onClick={() => navigate("weekly")}>
             <CalendarDays size={19} />
             <span>Dự báo 7 ngày</span>
+          </button>
+          <button className="nav-item" onClick={() => navigate("random-forest")}>
+            <BrainCircuit size={19} />
+            <span>Random Forest</span>
+          </button>
+          <button className="nav-item" onClick={() => navigate("time-series")}>
+            <TrendingUp size={19} />
+            <span>Time Series</span>
+          </button>
+          <button className="nav-item" onClick={() => navigate("gradient-boosting")}>
+            <Layers size={19} />
+            <span>Gradient Boosting</span>
+          </button>
+          <button className="nav-item" onClick={() => navigate("chronos")}>
+            <Sparkles size={19} />
+            <span>Chronos‑2 Small</span>
+          </button>
+          <button className="nav-item" onClick={() => navigate("weather-assistant")}>
+            <MessageCircle size={19} />
+            <span>Hỏi đáp thời tiết</span>
           </button>
           <button
             className={view === "saved" ? "nav-item active" : "nav-item"}
@@ -1518,6 +1549,36 @@ export default function WeatherApp() {
                 </section>
               </aside>
             </div>
+
+            <RandomForestPanel
+              key={`rf-${place.latitude},${place.longitude}`}
+              place={place}
+              unit={unit}
+            />
+            <TimeSeriesPanel
+              key={`series-${place.latitude},${place.longitude}`}
+              place={place}
+              unit={unit}
+            />
+            <TimeSeriesPanel
+              key={`boosting-${place.latitude},${place.longitude}`}
+              variant="gradient-boosting"
+              place={place}
+              unit={unit}
+            />
+            <TimeSeriesPanel
+              key={`chronos-${place.latitude},${place.longitude}`}
+              variant="chronos"
+              place={place}
+              unit={unit}
+            />
+            <WeatherAssistantPanel
+              key={`assistant-${place.latitude},${place.longitude}`}
+              place={place}
+              forecast={data}
+              unit={unit}
+              stale={stale}
+            />
 
             {/* [APP-093] Bốn thẻ thành phố dùng dữ liệu batch; bấm thẻ gọi selectPlace. */}
             <section className="explore-section">
