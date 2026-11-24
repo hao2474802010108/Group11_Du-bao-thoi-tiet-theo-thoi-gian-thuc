@@ -1,5 +1,6 @@
 """Hỏi đáp tiếng Việt bằng Qwen chạy trên CPU và số liệu Open-Meteo của ứng dụng."""
 
+# [WA-001] File này chọn dữ liệu Open-Meteo theo câu hỏi, nạp Qwen trên CPU và trả lời bằng tiếng Việt.
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -13,11 +14,13 @@ import re
 import unicodedata
 
 
+# [WA-002] Cố định tên và phiên bản Qwen. Danh sách bên dưới giới hạn những tệp cần cho mô hình và tokenizer.
 MODEL = "Qwen/Qwen2.5-0.5B-Instruct"
 MODEL_REVISION = "7ae557604adf67be50417f59c2c2f167def9a775"
 MODEL_FILES = ("config.json", "generation_config.json", "model.safetensors", "tokenizer.json", "tokenizer_config.json")
 SOURCE = "Open-Meteo"
 MAX_QUESTION_LENGTH = 300
+# [WA-003] Đặt cách trả lời, ngôn ngữ và quy tắc dùng đúng số liệu, đơn vị, địa điểm và khung giờ.
 SYSTEM_PROMPT = (
     "Bạn là trợ lý thời tiết Mây Việt. Trả lời bằng tiếng Việt trong 1 hoặc 2 câu ngắn. "
     "Trả lời đúng địa điểm và khung thời gian của câu hỏi. Dùng số liệu được cung cấp và giữ đúng đơn vị. "
@@ -27,16 +30,19 @@ SYSTEM_PROMPT = (
 )
 
 
+# [WA-004] Giữ xác suất mưa cao nhất và giờ tương ứng để so với lời khuyên do Qwen tạo.
 @dataclass(frozen=True)
 class RainAdvice:
     probability: float
     hour: datetime
 
+    # [WA-005] Tạo lời khuyên trực tiếp từ dữ liệu. Từ 50% trở lên gợi ý mang ô, dưới mức đó cho người dùng cân nhắc.
     @property
     def reference(self) -> str:
         advice = "Bạn nên mang ô" if self.probability >= 50 else "Bạn có thể cân nhắc mang ô"
         return f"{advice}. Xác suất mưa cao nhất trong khung giờ được hỏi là {_display(self.probability, '%')} lúc {self.hour:%H:%M} ngày {self.hour:%d/%m}."
 
+    # [WA-006] Kiểm tra lời khuyên, xác suất và giờ. Nếu ghi ngày thì ngày phải đúng. Dưới 50% cần khớp nguyên câu tham chiếu.
     def matches(self, answer: str) -> bool:
         phrase = _fold(answer)
         if self.probability < 50:
@@ -50,6 +56,7 @@ class RainAdvice:
                 and times == {f"{self.hour:%H:%M}"} and dates <= {f"{self.hour:%d/%m}"})
 
 
+# [WA-007] Gom câu hỏi, các số liệu gửi vào Qwen, giờ dữ liệu và lời khuyên đối chứng nếu có.
 @dataclass(frozen=True)
 class ForecastContext:
     question: str
@@ -58,6 +65,7 @@ class ForecastContext:
     rain_advice: RainAdvice | None = None
 
 
+# [WA-008] Giới hạn độ dài văn bản, bỏ dấu điều khiển dạng token và thu gọn khoảng trắng.
 def _clean_text(value: object, name: str, maximum: int) -> str:
     if not isinstance(value, str) or len(value) > maximum:
         raise ValueError(f"{name} cần là văn bản tối đa {maximum} ký tự.")
@@ -67,11 +75,13 @@ def _clean_text(value: object, name: str, maximum: int) -> str:
     return value
 
 
+# [WA-009] Viết thường và bỏ dấu tiếng Việt để nhận ra các cụm giờ và từ khóa dù kiểu gõ khác nhau.
 def _fold(value: str) -> str:
     normalized = unicodedata.normalize("NFD", value.lower().replace("đ", "d"))
     return "".join(character for character in normalized if not unicodedata.combining(character))
 
 
+# [WA-010] Chuyển mốc ngày giờ từ Open-Meteo thành datetime. Trả None nếu định dạng hoặc giá trị không hợp lệ.
 def _time(value: object) -> datetime | None:
     if not isinstance(value, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}", value):
         return None
@@ -81,6 +91,7 @@ def _time(value: object) -> datetime | None:
         return None
 
 
+# [WA-011] Chuyển riêng mốc theo ngày sang date để lọc dự báo ngày.
 def _date(value: object) -> date | None:
     if not isinstance(value, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
         return None
@@ -90,12 +101,14 @@ def _date(value: object) -> date | None:
         return None
 
 
+# [WA-012] Giữ số hữu hạn trong khoảng hợp lệ của từng chỉ số. Giá trị thiếu hoặc sai sẽ không đi vào câu trả lời.
 def _number(value: object, minimum: float, maximum: float) -> float | None:
     if type(value) not in (int, float) or not minimum <= value <= maximum:
         return None
     return float(value) if math.isfinite(value) else None
 
 
+# [WA-013] Đổi °C sang °F nếu giao diện yêu cầu và ghép đơn vị vào số liệu đã làm tròn.
 def _display(value: float | None, unit: str = "") -> str | None:
     if value is None:
         return None
@@ -104,6 +117,7 @@ def _display(value: float | None, unit: str = "") -> str | None:
     return f"{value:.1f}".removesuffix(".0") + unit
 
 
+# [WA-014] Đọc chỉ số tại đúng vị trí trong mảng theo giờ hoặc theo ngày, sau đó áp dụng kiểm tra số.
 def _value(series: dict, key: str, index: int, minimum: float, maximum: float) -> float | None:
     values = series.get(key)
     if not isinstance(values, list) or index >= len(values):
@@ -111,6 +125,7 @@ def _value(series: dict, key: str, index: int, minimum: float, maximum: float) -
     return _number(values[index], minimum, maximum)
 
 
+# [WA-015] Nhận dạng ngày cụ thể, hôm nay, ngày mai và ngày kia dựa trên mốc Open-Meteo.
 def _select_period(question: str, current: datetime, available_days: list[date]) -> tuple[date | None, range]:
     query = _fold(question)
     requested_day = None
@@ -129,6 +144,7 @@ def _select_period(question: str, current: datetime, available_days: list[date])
     elif re.search(r"\b(hom nay|sang nay|trua nay|chieu nay|toi nay|dem nay)\b", query):
         requested_day = current.date()
 
+    # [WA-016] Giờ viết rõ được ưu tiên. Nếu chỉ hỏi một buổi, chọn phạm vi giờ của buổi đó.
     explicit_hour = re.search(r"\b([0-9]|[01][0-9]|2[0-3])\s*(?:h\b|gio\b|:[0-5]\d\b)", query)
     if explicit_hour:
         hour = int(explicit_hour.group(1))
@@ -140,10 +156,12 @@ def _select_period(question: str, current: datetime, available_days: list[date])
     return requested_day, range(24)
 
 
+# [WA-017] Ghép tên vào chỉ số có dữ liệu. Trường thiếu sẽ được bỏ khi nối thành câu.
 def _describe(label: str, value: str | None) -> str | None:
     return f"{label} {value}" if value is not None else None
 
 
+# [WA-018] Đọc dữ liệu thời tiết gửi từ giao diện, kiểm tra múi giờ Việt Nam và chỉ giữ thông tin liên quan để tạo ngữ cảnh.
 def _forecast_context(payload: dict) -> ForecastContext:
     question = _clean_text(payload.get("question"), "Câu hỏi", MAX_QUESTION_LENGTH)
     place = _clean_text(payload.get("place"), "Địa điểm", 100)
@@ -172,6 +190,7 @@ def _forecast_context(payload: dict) -> ForecastContext:
     requested_day, hours = _select_period(question, current_time, [day for _, day in day_rows])
     query = _fold(question)
     umbrella = re.search(r"\b(?:mang|dem|cam) (?:theo )?(?:o|du)\b", query)
+    # [WA-019] Nhận ra câu hỏi về hiện tại để mô hình không lẫn chỉ số tại mốc hiện tại với các giờ dự báo.
     current_only = (
         requested_day is None
         and umbrella is None
@@ -181,6 +200,7 @@ def _forecast_context(payload: dict) -> ForecastContext:
 
     facts = [f"Dữ liệu dự báo {SOURCE} tại {place}. Giờ Việt Nam (GMT+7). Mốc dữ liệu: {as_of}."]
     found_values = False
+    # [WA-020] Thêm các chỉ số hiện tại khi câu hỏi không chỉ định ngày hoặc hỏi về hôm nay.
     if requested_day is None or requested_day == current_time.date():
         latest = [
             _describe("nhiệt độ", _display(_number(current.get("temperature_2m"), -100, 70), temp_unit)),
@@ -203,6 +223,7 @@ def _forecast_context(payload: dict) -> ForecastContext:
     first_hour = current_time.replace(minute=0)
     hour_rows = []
     rain_rows = []
+    # [WA-021] Lọc mốc đã qua và giờ ngoài yêu cầu. Với câu hỏi không chỉ định ngày, dùng tối đa 30 giờ tiếp theo.
     for index, raw in enumerate(known_hourly_times[:168]):
         time = _time(raw)
         if time is None or time < first_hour or time.hour not in hours:
@@ -228,6 +249,7 @@ def _forecast_context(payload: dict) -> ForecastContext:
         found_values = True
     elif requested_day is not None:
         facts.append(f"Không có số liệu từng giờ phù hợp ngày {requested_day:%d/%m} trong khung giờ được hỏi.")
+    # [WA-022] Chọn giờ có xác suất mưa cao nhất trong phần đã lọc để tạo lời khuyên có số liệu đối chiếu.
     rain_advice = None
     if rain_rows:
         rain, time = max(rain_rows, key=lambda row: row[0])
@@ -236,6 +258,7 @@ def _forecast_context(payload: dict) -> ForecastContext:
             rain_advice = RainAdvice(rain, time)
             facts.append(f"Gợi ý đã được tính cho người dùng: {rain_advice.reference}")
 
+    # [WA-023] Thêm phần dự báo theo ngày cho câu hỏi so sánh. Xác suất mưa tại đây là mức cao nhất của cả ngày.
     facts.append("Tóm tắt theo ngày (khả năng mưa là mức cao nhất của cả ngày):")
     for index, day in day_rows:
         metrics = [
@@ -253,6 +276,7 @@ def _forecast_context(payload: dict) -> ForecastContext:
     return ForecastContext(question, "\n".join(facts), as_of, rain_advice)
 
 
+# [WA-024] Quản lý trạng thái tải mô hình và trả lời qua API. Khóa tải và khóa sinh câu trả lời được dùng riêng.
 class WeatherAssistant:
     def __init__(self, root: Path) -> None:
         self.cache = root / "models" / "ai-cache"
@@ -262,9 +286,11 @@ class WeatherAssistant:
         self._message = "Chuẩn bị Qwen để hỏi đáp thời tiết (tải khoảng 1 GB trong lần đầu)."
         self._runtime = None
 
+    # [WA-025] Kiểm tra tên thư viện AI mà chưa import Torch để nút trạng thái phản hồi nhanh.
     def _has_dependencies(self) -> bool:
         return all(find_spec(package) is not None for package in ("torch", "transformers", "huggingface_hub"))
 
+    # [WA-026] Trả trạng thái mô hình và hướng dẫn cài nếu thiếu phụ thuộc.
     def status(self) -> dict:
         with self._state_lock:
             state, message = self._state, self._message
@@ -273,6 +299,7 @@ class WeatherAssistant:
             message = "Cài thư viện AI bằng python -m pip install -r requirements-ai.txt rồi khởi động lại Mây Việt."
         return {"state": state, "model": MODEL, "message": message}
 
+    # [WA-027] Bắt đầu chuẩn bị Qwen trong luồng nền khi người dùng yêu cầu hoặc thử lại sau lỗi.
     def prepare(self) -> dict:
         if not self._has_dependencies():
             return self.status()
@@ -287,6 +314,7 @@ class WeatherAssistant:
                     self._message = "Chưa khởi động được tác vụ chuẩn bị Qwen. Hãy thử lại."
         return self.status()
 
+    # [WA-028] Ưu tiên dùng snapshot đúng phiên bản đã lưu. Tải các tệp thiếu khi chưa mở được bản cục bộ.
     def _load_model(self):
         import torch
         from huggingface_hub import snapshot_download
@@ -300,6 +328,7 @@ class WeatherAssistant:
             model_path = None
         if model_path is None or not all((model_path / name).is_file() for name in MODEL_FILES):
             model_path = Path(snapshot_download(MODEL, max_workers=3, **options))
+        # [WA-029] Giới hạn CPU, mở tokenizer và trọng số safetensors có sẵn rồi đưa mô hình sang chế độ suy luận.
         torch.set_num_threads(min(4, os.cpu_count() or 1))
         tokenizer = AutoTokenizer.from_pretrained(model_path, local_files_only=True, trust_remote_code=False)
         model = AutoModelForCausalLM.from_pretrained(
@@ -310,6 +339,7 @@ class WeatherAssistant:
         model.generation_config.top_k = None
         return torch, tokenizer, model
 
+    # [WA-030] Cập nhật trạng thái sau khi tải mô hình. Phân biệt thiếu thư viện với lỗi khi lấy hoặc nạp trọng số.
     def _prepare_model(self) -> None:
         try:
             runtime = self._load_model()
@@ -327,6 +357,7 @@ class WeatherAssistant:
                 self._state = "ready"
                 self._message = "Qwen đã sẵn sàng trên máy này."
 
+    # [WA-031] Chuẩn bị ngữ cảnh đã lọc rồi sinh câu trả lời. Mỗi thời điểm chỉ xử lý một yêu cầu sinh văn bản.
     def ask(self, payload: dict) -> dict:
         context = _forecast_context(payload)
         with self._state_lock:
@@ -339,6 +370,7 @@ class WeatherAssistant:
             answer = self._generate(runtime, context.question, context.facts)
         finally:
             self._generate_lock.release()
+        # [WA-032] Nếu lời khuyên mang ô không khớp số liệu, dùng câu tham chiếu và trả mode để giao diện ghi rõ nguồn.
         mode = "generated"
         if context.rain_advice is not None and not context.rain_advice.matches(answer):
             answer = context.rain_advice.reference
@@ -347,6 +379,7 @@ class WeatherAssistant:
             raise ValueError("Qwen chưa tạo được câu trả lời. Hãy thử diễn đạt câu hỏi cụ thể hơn.")
         return {"answer": answer, "model": MODEL, "source": SOURCE, "as_of": context.as_of, "mode": mode}
 
+    # [WA-033] Dùng mẫu hội thoại của Qwen để đổi hướng dẫn và số liệu thành token, rồi giới hạn chiều dài và thời gian sinh.
     def _generate(self, runtime, question: str, facts: str) -> str:
         torch, tokenizer, model = runtime
         messages = [
@@ -360,4 +393,5 @@ class WeatherAssistant:
                 **inputs, max_new_tokens=110, max_time=80, do_sample=False, repetition_penalty=1.06,
                 pad_token_id=tokenizer.eos_token_id,
             )
+        # [WA-034] Chỉ giải mã phần Qwen vừa sinh, bỏ phần đầu vào và các token điều khiển.
         return tokenizer.decode(output[0][inputs.input_ids.shape[-1]:], skip_special_tokens=True).strip()

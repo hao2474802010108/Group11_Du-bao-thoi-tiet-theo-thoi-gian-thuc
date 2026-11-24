@@ -1,4 +1,4 @@
-/* [CSS-000] CHÚ THÍCH CSS: xem README để biết thứ tự nạp và nơi chỉnh màu/độ trong. */
+/* [CSS-000] Kiểu nền cho toàn ứng dụng, gồm bố cục, màu, icon thời tiết và các kích thước màn hình. */
 /* [CSS-001] Nạp font Manrope từ file trong public/fonts; không phải tải từ Google Fonts khi mở trang. */
 @font-face {
   font-family: Manrope;
@@ -153,6 +153,7 @@ input::placeholder {
   z-index: 40;
   display: flex;
   flex-direction: column;
+  /* [CSS-072] Cho thanh bên cuộn riêng khi các mục điều hướng dài hơn chiều cao màn hình. */
   overflow-y: auto;
   padding: 35px 20px 22px;
 }

@@ -7,6 +7,7 @@ Yêu cầu: Python 3.10 trở lên. Cài requirements.txt để dùng các mục
 Giữ nguyên thư mục dist cạnh app.py vì đó là giao diện đã được biên dịch.
 """
 
+# [PY-073] File này mở Mây Việt trên localhost, phục vụ giao diện đã build và điều phối API mô hình.
 # [PY-001] Để chú thích kiểu được xử lý muộn, thuận tiện khi hai lớp tham chiếu nhau.
 from __future__ import annotations
 
@@ -41,7 +42,7 @@ from urllib.parse import parse_qs, unquote, urlsplit
 # 2. THƯ MỤC VÀ THÔNG SỐ MẶC ĐỊNH
 # [PY-013] Lấy vị trí thật của app.py, không phụ thuộc thư mục đang đứng trong terminal.
 APP_DIR = Path(__file__).resolve().parent
-# [PY-014] Chỉ phục vụ nội dung trong dist; không công khai README, code hay file khác của laptop.
+# [PY-014] Tệp tĩnh chỉ được đọc trong dist. Các đường /api/ được chuyển đến dịch vụ riêng.
 DIST_DIR = APP_DIR / "dist"
 # [PY-015] Chỉ lắng nghe trên máy hiện tại; không mở máy chủ ra mạng LAN hoặc Internet.
 HOST = "127.0.0.1"
@@ -49,7 +50,9 @@ HOST = "127.0.0.1"
 DEFAULT_PORT = 5173
 # [PY-017] Nếu cổng bận, thử thêm 10 cổng tiếp theo thay vì đóng ứng dụng ngay.
 EXTRA_PORTS = 10
+# [PY-074] Giới hạn dung lượng JSON trước khi đọc thân yêu cầu để tránh giữ quá nhiều dữ liệu trong bộ nhớ.
 MAX_MODEL_BODY = 1_000_000
+# [PY-075] Mỗi đường dẫn cố định trỏ đến một phương thức HTTP, nhóm dịch vụ và thao tác được phép.
 MODEL_ROUTES = {
     "/api/ml/status": ("GET", "rf", "status"),
     "/api/ml/train": ("POST", "rf", "start_training"),
@@ -89,7 +92,7 @@ CONTENT_TYPES = {
 
 
 # 3. XỬ LÝ CÁC YÊU CẦU TỪ TRÌNH DUYỆT
-# [PY-019] Lớp này gửi HTML/JS/CSS/font cho trình duyệt; không gọi API dự báo thay người dùng.
+# [PY-019] Bộ xử lý gửi giao diện và nhận yêu cầu mô hình. Trình duyệt vẫn gọi Open-Meteo để lấy dự báo thời tiết trực tiếp.
 class WeatherRequestHandler(BaseHTTPRequestHandler):
     # [PY-020] Chú thích kiểu cho thuộc tính server có sẵn của lớp cha, giúp IDE gợi ý chính xác.
     server: MayVietServer
@@ -110,7 +113,7 @@ class WeatherRequestHandler(BaseHTTPRequestHandler):
         self.send_header("X-Content-Type-Options", "nosniff")
         super().end_headers()
 
-    # [PY-026] GET lấy nội dung file, dùng khi trình duyệt tải trang và các tài nguyên.
+    # [PY-026] GET đọc trạng thái mô hình, xuất CSV hoặc gửi tệp tĩnh theo đường dẫn.
     def do_GET(self) -> None:
         if not self._handle_model_route("GET"):
             self._serve_file(head_only=False)
@@ -120,11 +123,12 @@ class WeatherRequestHandler(BaseHTTPRequestHandler):
         if not self._handle_model_route("GET", head_only=True):
             self._serve_file(head_only=True)
 
-    # [PY-028] POST chỉ dành cho huấn luyện và dự báo, không sửa tệp giao diện.
+    # [PY-028] POST nhận dữ liệu huấn luyện, dự báo, chuẩn bị Qwen hoặc câu hỏi thời tiết.
     def do_POST(self) -> None:
         if not self._handle_model_route("POST"):
             self._method_not_allowed()
 
+    # [PY-076] Trả 405 khi phương thức HTTP không phù hợp, kèm danh sách phương thức có thể dùng.
     def _method_not_allowed(self) -> None:
         self.send_response(HTTPStatus.METHOD_NOT_ALLOWED)
         self.send_header("Allow", "GET, HEAD")
@@ -134,6 +138,7 @@ class WeatherRequestHandler(BaseHTTPRequestHandler):
     # [PY-029] Dùng lại cùng một hàm cho những phương thức không hỗ trợ, tránh lặp code.
     do_PUT = do_PATCH = do_DELETE = do_OPTIONS = do_TRACE = _method_not_allowed
 
+    # [PY-077] Chỉ import và khởi tạo dịch vụ Random Forest khi được gọi lần đầu. Dùng khóa để các luồng dùng chung một bản.
     def _ml_service(self):
         with self.server.models_lock:
             if self.server.ml_service is None:
@@ -142,6 +147,7 @@ class WeatherRequestHandler(BaseHTTPRequestHandler):
                 self.server.ml_service = MLService(self.server.directory.parent)
             return self.server.ml_service
 
+    # [PY-078] Tạo dịch vụ Holt–Winters với lịch sử và báo cáo Random Forest làm nguồn đối chiếu.
     def _series_service(self):
         with self.server.models_lock:
             if self.server.series_service is None:
@@ -150,6 +156,7 @@ class WeatherRequestHandler(BaseHTTPRequestHandler):
                 self.server.series_service = TimeSeriesService(self._ml_service())
             return self.server.series_service
 
+    # [PY-079] Chọn dịch vụ theo nhóm trong bảng API và giữ lại đối tượng đã tạo để dùng cho lần gọi sau.
     def _model_service(self, group: str):
         if group == "rf":
             return self._ml_service()
@@ -160,9 +167,11 @@ class WeatherRequestHandler(BaseHTTPRequestHandler):
             if service is not None:
                 return service
             root = self.server.directory.parent
+            # [PY-080] Đặt mặc định tải Hugging Face trước khi các thư viện AI được nạp. Giữ giá trị người chạy đã cấu hình nếu có.
             if group in {"assistant", "chronos"}:
                 os.environ.setdefault("HF_HUB_DISABLE_XET", "1")
                 os.environ.setdefault("HF_HUB_DOWNLOAD_TIMEOUT", "60")
+            # [PY-081] Qwen có dịch vụ hỏi đáp riêng. Với hai mô hình còn lại, truyền hàm kiểm thử và hàm dự báo vào dịch vụ chung.
             if group == "assistant":
                 from weather_assistant import WeatherAssistant
 
@@ -190,10 +199,12 @@ class WeatherRequestHandler(BaseHTTPRequestHandler):
             self.server.forecast_services[group] = service
             return service
 
+    # [PY-082] Mã hóa phản hồi JSON thành UTF-8. Giữ nguyên tiếng Việt và từ chối xuất NaN hoặc vô cực.
     def _send_json(self, status: int, data: dict, head_only: bool = False) -> None:
         content = json.dumps(data, ensure_ascii=False, allow_nan=False).encode("utf-8")
         self._send_content(status, "application/json; charset=utf-8", content, head_only)
 
+    # [PY-083] Kiểm tra kiểu nội dung, giới hạn kích thước và chỉ nhận đối tượng JSON cho các yêu cầu POST.
     def _read_model_body(self) -> dict:
         if self.headers.get_content_type() != "application/json":
             raise ModelRequestError(HTTPStatus.UNSUPPORTED_MEDIA_TYPE, "Yêu cầu phải là JSON.")
@@ -213,6 +224,7 @@ class WeatherRequestHandler(BaseHTTPRequestHandler):
             raise ValueError("Yêu cầu phải chứa đối tượng JSON.")
         return body
 
+    # [PY-084] Phân biệt đường dẫn API với tệp tĩnh. Sau khi kiểm tra phương thức, chuyển yêu cầu tới đúng dịch vụ.
     def _handle_model_route(self, method: str, head_only: bool = False) -> bool:
         if not self.path.startswith("/api/"):
             return False
@@ -226,18 +238,21 @@ class WeatherRequestHandler(BaseHTTPRequestHandler):
                 self._send_content(HTTPStatus.METHOD_NOT_ALLOWED, "application/json; charset=utf-8",
                                    b"{}", head_only, {"Allow": "GET, HEAD" if allowed == "GET" else "POST"})
                 return True
+            # [PY-085] API chỉ chấp nhận tên máy cục bộ. Nếu trình duyệt gửi Origin, giá trị đó phải khớp trang đang chạy.
             host = self.headers.get("Host", "").lower()
             if not host or urlsplit(f"http://{host}").hostname not in {"localhost", HOST}:
                 raise ModelRequestError(HTTPStatus.FORBIDDEN, "API mô hình chỉ dùng trên máy này.")
             origin = self.headers.get("Origin")
             if origin and origin.lower() != f"http://{host}":
                 raise ModelRequestError(HTTPStatus.FORBIDDEN, "Yêu cầu mô hình phải đến từ chính trang Mây Việt.")
+            # [PY-086] POST đọc tham số từ JSON. GET đọc từ chuỗi truy vấn phía sau đường dẫn.
             if method == "POST":
                 body = self._read_model_body()
             else:
                 body = {key: values[0] for key, values in parse_qs(url.query).items()}
             coords = (body.get("latitude"), body.get("longitude"))
             service = self._model_service(group)
+            # [PY-087] Hỏi đáp nhận cả nội dung câu hỏi và dự báo nguồn. Các mô hình nhiệt độ làm việc theo tọa độ và giờ đầu vào.
             if group == "assistant":
                 result = service.ask(body) if action == "ask" else getattr(service, action)()
             elif action == "predict":
@@ -245,6 +260,7 @@ class WeatherRequestHandler(BaseHTTPRequestHandler):
                 if not isinstance(context, dict):
                     raise ValueError("Thiếu dữ liệu theo giờ để dự báo.")
                 result = service.predict(*coords, context)
+            # [PY-088] Trả CSV làm tệp tải về. Tên tệp được tạo bởi dịch vụ Random Forest.
             elif action == "export":
                 name, csv_content = service.export(*coords)
                 self._send_content(HTTPStatus.OK, "text/csv; charset=utf-8", csv_content, head_only,
@@ -253,6 +269,7 @@ class WeatherRequestHandler(BaseHTTPRequestHandler):
             else:
                 result = getattr(service, action)(*coords)
             self._send_json(HTTPStatus.OK, result, head_only)
+        # [PY-089] Trả mã HTTP theo loại lỗi để giao diện phân biệt dữ liệu sai, thư viện thiếu và lỗi xử lý.
         except ModelRequestError as error:
             self._send_json(error.status, {"error": str(error)}, head_only)
         except ValueError as error:
@@ -325,6 +342,7 @@ class WeatherRequestHandler(BaseHTTPRequestHandler):
         # [PY-045] 200 nghĩa là tải thành công; Content-Length là số byte, không phải số ký tự.
         self._send_content(HTTPStatus.OK, content_type, content, head_only)
 
+    # [PY-090] Dùng chung một đường gửi phản hồi cho HTML, tài nguyên và API. Với HEAD chỉ gửi tiêu đề.
     def _send_content(self, status: int, content_type: str, content: bytes, head_only: bool,
                       headers: dict[str, str] | None = None) -> None:
         self.send_response(status)
@@ -347,6 +365,7 @@ class WeatherRequestHandler(BaseHTTPRequestHandler):
             super().log_message(format, *args)
 
 
+# [PY-091] Mang theo mã HTTP và lời giải thích để bộ định tuyến trả đúng lỗi.
 class ModelRequestError(Exception):
     def __init__(self, status: int, message: str) -> None:
         super().__init__(message)
@@ -367,6 +386,7 @@ class MayVietServer(ThreadingHTTPServer):
     def __init__(self, port: int, directory: Path, verbose: bool = False) -> None:
         self.directory = directory.resolve()
         self.verbose = verbose
+        # [PY-092] Lưu dịch vụ mô hình dùng chung cho các yêu cầu. RLock cho phép tạo dịch vụ này từ dịch vụ khác đã giữ khóa.
         self.models_lock = threading.RLock()
         self.ml_service = None
         self.series_service = None
@@ -432,7 +452,7 @@ def open_browser(url: str) -> None:
 
 # [PY-064] Đóng gói thao tác khởi chạy trong main để import app trong test không tự bật server.
 def main(argv: list[str] | None = None) -> int:
-    # [PY-065] Kiểm tra môi trường thực thi; các phiên bản Python mới hơn vẫn được chấp nhận.
+    # [PY-065] Kiểm tra phiên bản Python tối thiểu trước khi khởi động.
     if sys.version_info < (3, 10):
         print("Mây Việt cần Python 3.10 trở lên.", file=sys.stderr)
         return 1

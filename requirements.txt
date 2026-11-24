@@ -1,8 +1,11 @@
-# Random Forest, Holt–Winters và Gradient Boosting. Bản ghim khớp các mô hình TP.HCM.
+# [DEP-000] Các thư viện cần để chạy Random Forest, Holt–Winters và Gradient Boosting.
+# [DEP-001] NumPy xử lý mảng số, SciPy hỗ trợ tối ưu và scikit-learn cung cấp mô hình cây. Các bản này khớp với mô hình TP.HCM đi kèm.
 numpy==2.5.3; python_version >= "3.12"
 scipy==1.18.1; python_version >= "3.12"
 scikit-learn==1.8.0; python_version >= "3.12"
+# [DEP-002] Với Python 3.10 hoặc 3.11, pip chọn bản tương thích theo khoảng phiên bản này.
 numpy>=1.25,<3; python_version < "3.12"
 scipy>=1.11,<2; python_version < "3.12"
 scikit-learn>=1.4,<2; python_version < "3.12"
+# [DEP-003] Joblib lưu và nạp mô hình cây đã huấn luyện.
 joblib==1.6.0

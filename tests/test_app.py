@@ -3,6 +3,7 @@
 Chạy tại thư mục MayViet: python -m unittest discover -s tests -p "test_*.py" -v
 """
 
+# [TEST-PY-000] Kiểm tra đường dẫn, phản hồi HTTP và cách app.py khởi động máy chủ trên máy người dùng.
 import contextlib
 import http.client
 import io
@@ -182,6 +183,7 @@ class StaticServerTests(unittest.TestCase):
         self.assertTrue(all(status == 200 and body == self.html for status, _, body in results))
 
 
+# [TEST-PY-028] Nhóm sau kiểm tra cách chạy app khi đổi cổng, thư mục hoặc trình duyệt.
 class StartupTests(unittest.TestCase):
     # [TEST-PY-019] Chiếm một cổng thật rồi kiểm tra ứng dụng tự chuyển sang cổng lân cận, vẫn chỉ bind localhost.
     def test_busy_port_uses_another_local_port(self) -> None:

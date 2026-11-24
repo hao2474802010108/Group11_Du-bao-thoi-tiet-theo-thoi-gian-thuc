@@ -1,5 +1,6 @@
 """Kiểm tra phép đối chiếu Gradient Boosting với bộ kiểm thử Random Forest."""
 
+# [GB-TEST-000] Huấn luyện thử trên dữ liệu giả lập để kiểm tra tập đánh giá và đầu vào dự báo.
 import copy
 import unittest
 
@@ -11,6 +12,7 @@ from weather_boosting import build_report, predict_next
 
 
 class GradientBoostingTests(unittest.TestCase):
+    # [GB-TEST-001] Hai mô hình dùng chung dữ liệu và được huấn luyện một lần cho cả nhóm bài kiểm tra.
     @classmethod
     def setUpClass(cls):
         cls.rows = fixture()
@@ -18,6 +20,7 @@ class GradientBoostingTests(unittest.TestCase):
         cls.reference = ml.fit_model(cls.rows, 10.78, 106.7, source, trees=8)
         cls.report, cls.model = build_report(cls.rows, cls.reference)
 
+    # [GB-TEST-002] So sánh cùng số đặc trưng, cùng mốc kiểm thử và cùng số liệu đối chứng.
     def test_uses_same_holdout_as_random_forest(self):
         reference_report = self.reference["report"]
         self.assertIsInstance(self.model, HistGradientBoostingRegressor)
@@ -30,6 +33,7 @@ class GradientBoostingTests(unittest.TestCase):
             [row["time"] for row in self.reference["holdout"][-72:]],
         )
 
+    # [GB-TEST-003] Đổi nhiệt độ và độ ẩm ở các giờ sau mốc dự báo để chắc chúng không ảnh hưởng kết quả.
     def test_live_prediction_ignores_future_weather(self):
         context = payload(self.rows[100:127], self.rows[124]["time"])
         first = predict_next(context, self.model, self.report)
@@ -39,6 +43,7 @@ class GradientBoostingTests(unittest.TestCase):
         self.assertEqual(first["target_time"], self.rows[125]["time"])
         self.assertAlmostEqual(first["temperature"], first["input_temperature"] + first["delta"])
 
+    # [GB-TEST-004] Nếu giá trị thực ở tập đối chiếu lệch với lịch sử đang dùng, dừng lập báo cáo.
     def test_mismatched_holdout_is_rejected(self):
         reference = copy.deepcopy(self.reference)
         reference["holdout"][0]["actual"] += 2

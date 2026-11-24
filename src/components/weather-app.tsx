@@ -3,7 +3,7 @@
 
 // [APP-001] Các hook React: useState giữ trạng thái, useEffect làm việc bên ngoài render, useMemo ghi nhớ kết quả, useRef giữ phần tử, useCallback giữ hàm.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-// [APP-002] Các hook React: useState giữ trạng thái, useEffect làm việc bên ngoài render, useMemo ghi nhớ kết quả, useRef giữ phần tử, useCallback giữ hàm.
+// [APP-002] Hai kiểu này mô tả nội dung React có thể hiển thị và sự kiện bàn phím của ô tìm kiếm.
 import type { ReactNode, KeyboardEvent } from "react";
 // [APP-003] Bộ icon SVG cho nút và chỉ số. Icon chỉ minh họa; số liệu vẫn đến từ API.
 import {
@@ -79,6 +79,7 @@ import {
 } from "@/lib/weather-client";
 // [APP-007] Tách biểu đồ và các thẻ từng giờ thành component riêng để dễ đọc và bảo trì.
 import HourlyForecast from "@/components/hourly-forecast";
+// [APP-107] Nạp các khung gọi mô hình Python. TimeSeriesPanel được dùng cho ba mô hình khác nhau.
 import RandomForestPanel from "@/components/random-forest-panel";
 import TimeSeriesPanel from "@/components/time-series-panel";
 import WeatherAssistantPanel from "@/components/weather-assistant-panel";
@@ -530,7 +531,7 @@ export default function WeatherApp() {
     );
     setToast(saved ? `Đã bỏ lưu ${p.name}` : `Đã lưu ${p.name} vào yêu thích`);
   }
-  // [APP-065] Mở màn hình đã chọn, rồi cuộn đến mục dự báo nếu có.
+  // [APP-065] Đóng menu trên điện thoại và chọn trang. Các mục dự báo cuộn đến thẻ tương ứng trên trang tổng quan.
   function navigate(
     destination: "overview" | "saved" | "weekly" | "random-forest" | "time-series"
       | "gradient-boosting" | "chronos" | "weather-assistant",
@@ -541,6 +542,7 @@ export default function WeatherApp() {
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
+    // [APP-108] Chờ React hiện trang tổng quan rồi mới tìm thẻ đích để cuộn vào.
     setTimeout(() => {
       document
         .getElementById(destination)
@@ -732,6 +734,7 @@ export default function WeatherApp() {
             <CalendarDays size={19} />
             <span>Dự báo 7 ngày</span>
           </button>
+          {/* [APP-109] Các nút dự báo và hỏi đáp dùng tên trùng với id của khung để cuộn đến mục tương ứng. */}
           <button className="nav-item" onClick={() => navigate("random-forest")}>
             <BrainCircuit size={19} />
             <span>Random Forest</span>
@@ -1550,6 +1553,7 @@ export default function WeatherApp() {
               </aside>
             </div>
 
+            {/* [APP-110] Khóa React gắn với tọa độ. Khi đổi địa điểm, mỗi khung khởi tạo lại trạng thái và dọn lượt chờ cũ. */}
             <RandomForestPanel
               key={`rf-${place.latitude},${place.longitude}`}
               place={place}
@@ -1572,6 +1576,7 @@ export default function WeatherApp() {
               place={place}
               unit={unit}
             />
+            {/* [APP-111] Trợ lý lấy lại bản dự báo của trang chính và biết khi dữ liệu đang xem là bản lưu cũ. */}
             <WeatherAssistantPanel
               key={`assistant-${place.latitude},${place.longitude}`}
               place={place}

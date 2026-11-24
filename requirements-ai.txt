@@ -1,5 +1,9 @@
-# Cài thêm để dùng Chronos‑2 Small và Qwen trên Python 3.12 hoặc 3.13.
+# [AIDEP-000] Cài thêm các thư viện để chạy Chronos‑2 Small và Qwen trên Python 3.12 hoặc 3.13.
+# [AIDEP-001] Dùng chung các phiên bản thư viện của phần dự báo cơ bản.
 -r requirements.txt
+# [AIDEP-002] PyTorch thực hiện phép tính cho Chronos và Qwen.
 torch==2.8.0
+# [AIDEP-003] Thư viện Chronos nạp checkpoint và tạo các phân vị dự báo nhiệt độ.
 chronos-forecasting==2.3.2
+# [AIDEP-004] Transformers nạp tokenizer và mô hình Qwen để xử lý câu hỏi.
 transformers==4.57.6

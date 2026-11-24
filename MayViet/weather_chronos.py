@@ -1,5 +1,6 @@
 """Dự báo trước một giờ bằng checkpoint Chronos-2 Small trên CPU."""
 
+# [CHR-001] File này nạp Chronos-2 Small đã huấn luyện sẵn, kiểm thử theo mốc Random Forest và dự báo nhiệt độ giờ tới trên CPU.
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -16,32 +17,37 @@ from weather_ml import VARIABLES, VN, hour, iso, rows_from_hourly, scores
 
 
 METHOD = "Chronos-2 Small"
+# [CHR-002] Cố định phiên bản checkpoint và dùng chung thư mục ai-cache để lần chạy sau có thể đọc lại trọng số.
 CHECKPOINT = "autogluon/chronos-2-small"
 CHECKPOINT_REVISION = "ddec01313e50b6bc58ebaa92ede81bc24a3d9f9a"
 DEFAULT_CACHE_DIR = Path(__file__).resolve().parent / "models" / "ai-cache"
 CHECKPOINT_FILES = ("config.json", "model.safetensors")
-WINDOW_HOURS = 168
-MIN_HOURS = 25
+# [CHR-003] Mỗi mốc dự báo dùng từ 25 đến 168 giờ liên tiếp. Dự báo trả ba phân vị P10, P50 và P90.
+WINDOW_HOURS = 168  # Tối đa bảy ngày nhiệt độ theo giờ cho mỗi dự báo.
+MIN_HOURS = 25  # Yêu cầu ít nhất 25 giờ liên tiếp ở mốc đầu vào.
 ONE_HOUR = timedelta(hours=1)
-BATCH_WINDOWS = 16
-QUANTILES = (0.1, 0.5, 0.9)
+BATCH_WINDOWS = 16  # Xử lý mỗi nhóm 16 mốc để kiểm thử trên CPU.
+QUANTILES = (0.1, 0.5, 0.9)  # Hai cận P10, P90 và giá trị trung vị P50.
 _load_lock = Lock()
 _prediction_lock = Lock()
 _model = None
 _loaded_cache: Path | None = None
 
 
+# [CHR-004] Kiểm tra thư viện đã cài mà chưa cần nạp PyTorch hay tải dữ liệu mô hình.
 def check_runtime() -> None:
     if any(find_spec(package) is None for package in ("chronos", "huggingface_hub", "torch")):
         raise ImportError("Chạy python -m pip install -r requirements-ai.txt rồi khởi động lại Mây Việt.")
 
 
+# [CHR-005] Chỉ báo có cache khi đúng snapshot đã có cả cấu hình lẫn trọng số.
 def weights_cached(cache_dir: Path | None = None) -> bool:
     cache = (cache_dir or DEFAULT_CACHE_DIR).resolve()
     snapshot = cache / "models--autogluon--chronos-2-small" / "snapshots" / CHECKPOINT_REVISION
     return all((snapshot / name).is_file() for name in CHECKPOINT_FILES)
 
 
+# [CHR-006] Dùng một bản mô hình đã nạp cho thư mục cache hiện tại. Khóa ngăn hai yêu cầu tải cùng lúc.
 def _pipeline(cache_dir: Path | None, allow_download: bool):
     global _model, _loaded_cache
     cache = (cache_dir or DEFAULT_CACHE_DIR).resolve()
@@ -59,6 +65,7 @@ def _pipeline(cache_dir: Path | None, allow_download: bool):
         except (ImportError, OSError) as error:
             raise ImportError("Chưa nạp được thư viện Chronos hoặc PyTorch. Hãy kiểm tra cài đặt AI.") from error
 
+        # [CHR-007] Tải các tệp cần thiết từ đúng phiên bản checkpoint khi được phép. Nếu có đủ cache, mở bản cục bộ.
         try:
             snapshot = snapshot_download(
                 CHECKPOINT,
@@ -71,6 +78,7 @@ def _pipeline(cache_dir: Path | None, allow_download: bool):
         except Exception as error:
             raise RuntimeError("Chưa tải được Chronos-2 Small từ Hugging Face. Kiểm tra kết nối và thử lại.") from error
 
+        # [CHR-008] Giới hạn tối đa 4 luồng và nạp trọng số safetensors từ đĩa vào CPU.
         torch.set_num_threads(min(torch.get_num_threads(), 4))
         try:
             _model = Chronos2Pipeline.from_pretrained(
@@ -82,6 +90,7 @@ def _pipeline(cache_dir: Path | None, allow_download: bool):
         return _model
 
 
+# [CHR-009] Lấy các giờ liên tiếp đến mốc đầu vào. Nhiệt độ là chuỗi cần dự báo, các chỉ số khác là đầu vào quá khứ.
 def _window(by_time: dict, anchor: datetime) -> dict:
     target = VARIABLES[0]
     history = []
@@ -92,14 +101,14 @@ def _window(by_time: dict, anchor: datetime) -> dict:
         history.append(row)
     if len(history) < MIN_HOURS:
         raise ValueError(f"Chronos-2 Small cần ít nhất {MIN_HOURS} giờ nhiệt độ liên tiếp.")
+    # [CHR-010] Đảo thứ tự về cũ đến mới rồi đưa các chuỗi về mảng float32 theo định dạng Chronos.
     history.reverse()
     values = {field: np.asarray([row[field] for row in history], dtype=np.float32) for field in VARIABLES}
     return {"target": values.pop(target), "past_covariates": values}
 
 
+# [CHR-011] Dự báo một bước theo lô. Tắt cross-learning để mỗi mốc kiểm thử chỉ dùng cửa sổ quá khứ của chính nó.
 def _forecast(pipeline, inputs: list[dict]) -> np.ndarray:
-    # Each evaluation cutoff has a separate group. Future observations from a different cutoff
-    # can never serve as context for the current forecast through cross-learning.
     with _prediction_lock:
         quantiles, _ = pipeline.predict_quantiles(
             inputs,
@@ -109,13 +118,15 @@ def _forecast(pipeline, inputs: list[dict]) -> np.ndarray:
             context_length=WINDOW_HOURS,
             cross_learning=False,
         )
+    # [CHR-012] Lấy ba phân vị cho giờ kế tiếp rồi kiểm tra kích thước và tính hữu hạn của kết quả.
     result = np.asarray([np.asarray(series)[0, 0] for series in quantiles], dtype=float)
     if result.shape != (len(inputs), len(QUANTILES)) or not np.isfinite(result).all():
         raise RuntimeError("Chronos-2 Small trả về dữ liệu dự báo không hợp lệ.")
-    # Keep the median point prediction if the model's raw interval crosses it.
+    # [CHR-013] Giữ dự báo trung vị và sắp hai biên để khoảng dự báo luôn chứa trung vị.
     return np.column_stack((result.min(axis=1), result[:, 1], result.max(axis=1)))
 
 
+# [CHR-014] Dùng checkpoint nguyên gốc trên các mốc kiểm thử Random Forest. Bước này không huấn luyện thêm Chronos.
 def build_report(
     rows: list[dict],
     rf_artifact: dict,
@@ -129,6 +140,7 @@ def build_report(
         raise ValueError("Chưa có mốc kiểm thử Random Forest để so sánh.")
     target = VARIABLES[0]
     by_time = {hour(row["time"]): row for row in rows}
+    # [CHR-015] Đối chiếu nhiệt độ thực và nhiệt độ giờ trước để tránh chấm trên phiên bản dữ liệu ERA5 khác.
     for reference in holdout:
         timestamp = hour(reference["time"])
         actual = by_time.get(timestamp, {}).get(target)
@@ -142,6 +154,7 @@ def build_report(
     pipeline = _pipeline(cache_dir, allow_download=True)
     forecasts = []
     elapsed = 0.0
+    # [CHR-016] Chia nhỏ bộ kiểm thử. Mỗi cửa sổ dừng trước giờ đích và thời gian đo chỉ tính phần gọi dự báo.
     for start in range(0, len(holdout), BATCH_WINDOWS):
         batch = holdout[start : start + BATCH_WINDOWS]
         inputs = [_window(by_time, hour(reference["time"]) - ONE_HOUR) for reference in batch]
@@ -151,6 +164,7 @@ def build_report(
         if progress is not None:
             progress(f"Chronos-2 Small đã kiểm thử {len(forecasts):,}/{len(holdout):,} mốc giờ.")
 
+    # [CHR-017] Tính sai số của dự báo trung vị, tỷ lệ nhiệt độ thực rơi vào khoảng P10–P90 và độ rộng trung bình.
     lower, predicted, upper = np.asarray(forecasts).T
     actual = np.asarray([row["actual"] for row in holdout])
     rf_predictions = np.asarray([row["predicted"] for row in holdout])
@@ -184,6 +198,7 @@ def build_report(
     }
 
 
+# [CHR-018] Chỉ dự báo sau khi báo cáo đúng phiên bản checkpoint và mốc đầu vào không nằm ở tương lai.
 def predict_next(
     context: dict, report: dict, *, cache_dir: Path | None = None, allow_download: bool = False,
 ) -> dict:
@@ -202,6 +217,7 @@ def predict_next(
     base = by_time[anchor][VARIABLES[0]]
     pipeline = _pipeline(cache_dir, allow_download)
     started = perf_counter()
+    # [CHR-019] Trả nhiệt độ giờ tới, hai biên dự báo, độ trễ dữ liệu và thời gian suy luận để giao diện hiển thị.
     lower, temperature, upper = map(float, _forecast(pipeline, [window])[0])
     return {
         "method": METHOD,

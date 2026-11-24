@@ -1,4 +1,4 @@
-// [TEST-HOUR-000] KIỂM THỬ HỒI QUY: dữ liệu fixture/fetch giả chỉ dùng trong test, không phải dữ liệu hiển thị của ứng dụng.
+// [TEST-HOUR-000] Kiểm tra chuỗi giờ trên biểu đồ, gồm mốc hiện tại, lúc qua nửa đêm và các giờ bị thiếu.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { getHourlyTimeline, clockTime } from "../src/lib/weather.ts";

@@ -1,4 +1,4 @@
-/* [RF-CSS-001] Card kính nhẹ dùng biến màu chung nên sáng/tối nhất quán, không giảm opacity của chữ. */
+/* [RF-CSS-001] Kiểu riêng cho khung Random Forest, từ dự báo hiện tại đến biểu đồ và bảng kiểm thử. */
 .rf-panel {
   margin-top: 22px;
   padding: 24px;
@@ -41,6 +41,7 @@
   margin-top: 4px;
   line-height: 1.7;
 }
+/* [RF-CSS-006] Nhãn ở đầu thẻ đổi màu khi mô hình sẵn sàng hoặc đang huấn luyện. */
 .rf-status {
   margin-left: auto;
   display: flex;
@@ -150,6 +151,7 @@
   font-size: 7px;
   line-height: 1.8;
 }
+/* [RF-CSS-007] Đặt thông tin lần chạy bên trái và nút thao tác bên phải. */
 .rf-actions {
   display: flex;
   align-items: center;
@@ -176,6 +178,7 @@
 .rf-actions > button:disabled {
   opacity: 0.55;
 }
+/* [RF-CSS-008] Các ô số liệu kiểm thử và ghi chú kết quả so với cách giữ nguyên nhiệt độ. */
 .rf-metrics {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -312,6 +315,7 @@
 .rf-dot-baseline {
   background: #c4aa72;
 }
+/* [RF-CSS-009] Giữ bảng chỉ số trong khung cuộn ngang khi các cột cần thêm chỗ. */
 .rf-table-wrapper {
   width: 100%;
   overflow-x: auto;
@@ -342,6 +346,7 @@
 .rf-score-table :is(th, td):first-child {
   text-align: left;
 }
+/* [RF-CSS-010] Mỗi thanh có độ dài do giao diện truyền vào theo mức đóng góp của đặc trưng. */
 .rf-importance {
   padding-top: 23px;
 }
@@ -488,6 +493,7 @@
 .rf-primary-button:disabled {
   opacity: 0.5;
 }
+/* [RF-CSS-011] Thanh chạy qua lại báo tác vụ còn đang chạy, không biểu diễn phần trăm hoàn thành. */
 .rf-progress {
   height: 4px;
   max-width: 250px;
@@ -599,6 +605,7 @@
     max-width: 180px;
   }
 }
+/* [RF-CSS-012] Hiển thị thanh chờ tĩnh khi người dùng bật chế độ giảm chuyển động. */
 @media (prefers-reduced-motion: reduce) {
   .rf-progress > span {
     animation: none;

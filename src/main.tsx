@@ -9,6 +9,7 @@ import WeatherApp from "./components/weather-app";
 import "./index.css";
 // [MAIN-005] Nạp sau index.css để ghi đè giao diện kính mờ và bố cục từng giờ. Thứ tự này có ý nghĩa.
 import "./glass-update.css";
+// [MAIN-007] Nạp kiểu trình bày riêng của khung Random Forest sau hai lớp CSS dùng chung.
 import "./random-forest.css";
 
 // [MAIN-006] Tìm #root trong index.html rồi render WeatherApp. Dấu ! là cam kết kiểu TypeScript rằng phần tử tồn tại, không phải kiểm tra lúc chạy.

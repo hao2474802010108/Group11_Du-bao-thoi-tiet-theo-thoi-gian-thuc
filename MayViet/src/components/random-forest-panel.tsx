@@ -1,3 +1,4 @@
+// [RF-UI-009] Khung Random Forest hiển thị dự báo giờ kế tiếp, kết quả kiểm thử ERA5 và CSV tải từ Python.
 import { useEffect, useRef, useState } from "react";
 import {
   BrainCircuit,
@@ -82,6 +83,7 @@ export default function RandomForestPanel({
     };
   }, [place.latitude, place.longitude, statusRevision]);
 
+  // [RF-UI-010] Hủy việc chờ phản hồi huấn luyện ở trình duyệt khi đổi địa điểm.
   useEffect(() => () => trainController.current?.abort(), []);
 
   // [RF-UI-004] Chỉ suy luận khi đã có model. Context lấy trực tiếp từ browser có cache; dữ liệu t+1 không gửi cho RF.
@@ -113,6 +115,7 @@ export default function RandomForestPanel({
           throw new Error(
             "Chưa có thư viện ML. Xem hướng dẫn cài requirements.txt.",
           );
+        // [RF-UI-011] Chỉ đặt số liệu Open-Meteo cạnh dự báo RF khi cả hai cùng giờ mục tiêu.
         setPrediction(result);
         setApiNext(
           input.apiTarget === result.target_time ? input.apiNext : null,
@@ -189,6 +192,7 @@ export default function RandomForestPanel({
         </span>
       </div>
 
+      {/* [RF-UI-012] Hiện lỗi kết nối hoặc lỗi huấn luyện theo phản hồi mới nhất và cho phép đọc lại trạng thái. */}
       {(serverError || trainError || status?.state === "error") && (
         <div className="rf-notice rf-notice-error" role="alert">
           {serverError || trainError || status?.message}
@@ -214,6 +218,7 @@ export default function RandomForestPanel({
           <div className="rf-notice">{status.message}</div>
         )}
 
+      {/* [RF-UI-013] Khi chưa có mô hình, hiện lựa chọn huấn luyện và báo địa điểm đã có CSV lịch sử hay chưa. */}
       {!model && status?.state !== "missing_dependencies" && (
         <div className="rf-empty">
           <div className="rf-empty-art">
@@ -251,7 +256,7 @@ export default function RandomForestPanel({
 
       {model && (
         <>
-          {/* [RF-UI-007] RF, API và nhiệt độ đầu vào là ba giá trị riêng; không dùng giá trị API tương lai để giả làm dự đoán ML. */}
+          {/* [RF-UI-007] Ba thẻ lần lượt hiện nhiệt độ RF dự báo, nhiệt độ Open-Meteo cùng giờ và mức thay đổi so với đầu vào. */}
           <div className="rf-prediction-grid">
             <div className="rf-prediction-main">
               <div className="rf-prediction-label">
@@ -304,6 +309,7 @@ export default function RandomForestPanel({
               vẫn xem được bên dưới.
             </div>
           )}
+          {/* [RF-UI-014] Nút đọc lại tăng predictionRevision để yêu cầu dữ liệu mới và tính lại dự báo. */}
           <div className="rf-actions">
             <span>
               {busy
@@ -356,6 +362,7 @@ export default function RandomForestPanel({
             </span>
           </div>
 
+          {/* [RF-UI-015] Phần mở rộng gom biểu đồ theo giờ, CSV kiểm thử, bảng sai số và thông tin học của mô hình. */}
           <details className="rf-details">
             <summary>
               <span>
@@ -495,6 +502,7 @@ export default function RandomForestPanel({
                   </tbody>
                 </table>
               </div>
+              {/* [RF-UI-016] Lấy năm đặc trưng có điểm cao nhất từ báo cáo và đổi tỷ trọng thành phần trăm để vẽ thanh. */}
               <div className="rf-importance">
                 <h3>Yếu tố mô hình sử dụng nhiều nhất</h3>
                 <p>

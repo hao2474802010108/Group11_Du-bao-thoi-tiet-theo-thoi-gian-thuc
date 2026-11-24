@@ -6,6 +6,7 @@ import react from "@vitejs/plugin-react";
 // [VITE-003] Đổi đường dẫn alias sang đường dẫn hệ điều hành.
 import { fileURLToPath } from "node:url";
 
+// [VITE-008] Đọc cổng của app.py để Vite gửi các yêu cầu mô hình về đúng máy chủ khi phát triển.
 const apiPort = process.env.MAYVIET_API_PORT;
 const apiTarget = apiPort ? `http://127.0.0.1:${apiPort}` : undefined;
 
@@ -19,7 +20,7 @@ export default defineConfig({
     port: 5173,
     host: "127.0.0.1",
     strictPort: true,
-    // Giữ Host gốc để API kiểm tra Origin của yêu cầu trình duyệt.
+    // [VITE-009] Chuyển tiếp /api khi có cổng Python và giữ Host gốc để máy chủ kiểm tra Origin.
     proxy: apiTarget ? { "/api": apiTarget } : undefined,
   },
 });

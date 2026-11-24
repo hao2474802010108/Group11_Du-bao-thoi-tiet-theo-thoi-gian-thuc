@@ -1,4 +1,4 @@
-/* [GLASS-000] CHÚ THÍCH CSS: xem README để biết thứ tự nạp và nơi chỉnh màu/độ trong. */
+/* [GLASS-000] Nạp sau kiểu nền để áp dụng bảng màu kính mờ và bố cục cuộn theo giờ. */
 /* Bề mặt kính mờ; có nền đặc dự phòng khi trình duyệt không hỗ trợ blur. */
 /* [GLASS-001] Ghi đè biến thiết kế sáng: nền pastel, thẻ bán trong suốt, viền sáng và bóng nhẹ. */
 :root {

@@ -1,3 +1,4 @@
+/* [SERIES-CSS-001] Kiểu chung cho khung Time Series, Gradient Boosting và Chronos. */
 .time-series-panel {
   --time-series-accent: #5d43b8;
   --time-series-reference: #536680;
@@ -8,6 +9,7 @@
   min-width: 0;
 }
 
+/* [SERIES-CSS-002] Đổi màu chữ và các đường biểu đồ cho nền tối. */
 :root[data-theme="dark"] .time-series-panel {
   --time-series-accent: #bdacff;
   --time-series-reference: #a4b5ce;
@@ -15,6 +17,7 @@
   --time-series-tint: #302746;
 }
 
+/* [SERIES-CSS-003] Gradient Boosting và Chronos có màu nhấn riêng qua thuộc tính data-variant. */
 .time-series-panel[data-variant="gradient-boosting"] {
   --time-series-accent: #a04a22;
   --time-series-tint: #fff0e7;
@@ -35,6 +38,7 @@
   --time-series-tint: #223754;
 }
 
+/* [SERIES-CSS-004] Đặt biểu tượng, tên mô hình và trạng thái trên cùng một hàng. */
 .time-series-heading {
   display: flex;
   align-items: center;
@@ -66,6 +70,7 @@
   line-height: 1.6;
 }
 
+/* [SERIES-CSS-005] Giữ nhãn trạng thái đủ rộng và đổi màu khi mô hình sẵn sàng. */
 .time-series-status {
   display: inline-flex;
   flex-shrink: 0;
@@ -86,6 +91,7 @@
   color: var(--time-series-accent);
 }
 
+/* [SERIES-CSS-006] Thông báo và kết quả có thể xuống dòng để nút vẫn vừa khi thẻ hẹp. */
 .time-series-notice,
 .time-series-forecast {
   display: flex;
@@ -110,6 +116,7 @@
   background: var(--time-series-tint);
 }
 
+/* [SERIES-CSS-007] Kiểu nút huấn luyện và dự báo, chỉ đổi viền khi nút còn dùng được. */
 .time-series-button {
   display: inline-flex;
   align-items: center;
@@ -135,6 +142,7 @@
   font-weight: 750;
 }
 
+/* [SERIES-CSS-008] Nhấn mạnh số nhiệt độ, phần đơn vị dùng cỡ chữ nhỏ hơn. */
 .time-series-forecast .time-series-temperature {
   margin: 3px 0;
   color: var(--time-series-accent);
@@ -154,6 +162,7 @@
   margin-top: 22px;
 }
 
+/* [SERIES-CSS-009] Chú giải dùng đúng màu của từng đường, với nét đứt cho Random Forest. */
 .time-series-legend {
   display: flex;
   flex-wrap: wrap;
@@ -185,6 +194,7 @@
   border-top-color: var(--time-series-reference);
 }
 
+/* [SERIES-CSS-010] Giữ biểu đồ trong chiều rộng thẻ và giới hạn chiều cao theo màn hình. */
 .time-series-chart {
   width: 100%;
   height: clamp(170px, 25vw, 245px);
@@ -194,6 +204,7 @@
   background: var(--card);
 }
 
+/* [SERIES-CSS-011] Bảng sai số canh phải các số và cho tên dài xuống dòng ở cột đầu. */
 .time-series-scores {
   width: 100%;
   margin-top: 14px;
@@ -229,6 +240,7 @@
   font-weight: 650;
 }
 
+/* [SERIES-CSS-012] Trên điện thoại, nhãn trạng thái chuyển xuống dưới tên mô hình. */
 @media (max-width: 560px) {
   .time-series-heading {
     display: grid;

@@ -1,5 +1,6 @@
 """Kiểm tra giao tiếp Chronos và ranh giới thời gian mà không cần tải checkpoint."""
 
+# [CHRONOS-TEST-000] Dùng mô hình thay thế để kiểm tra các tham số gửi sang Chronos và cách đọc kết quả.
 import copy
 import unittest
 from datetime import datetime, timedelta
@@ -13,6 +14,7 @@ from weather_chronos import (
 from weather_ml import VARIABLES, iso
 
 
+# [CHRONOS-TEST-001] Tạo 210 giờ có đủ nhiệt độ và các yếu tố thời tiết đi kèm.
 def fixture():
     start = datetime(2025, 1, 1)
     return [
@@ -23,6 +25,7 @@ def fixture():
     ]
 
 
+# [CHRONOS-TEST-002] Chuẩn bị tập đối chiếu mẫu. Mỗi dự báo giữ nguyên lấy nhiệt độ của giờ trước đó.
 def reference(rows):
     holdout = [
         {"time": row["time"], "actual": row["temperature_2m"], "predicted": row["temperature_2m"] + 0.2,
@@ -33,11 +36,13 @@ def reference(rows):
                        "history_end": rows[-1]["time"]}, "holdout": holdout}
 
 
+# [CHRONOS-TEST-003] Đưa các hàng dữ liệu về dạng mảng theo trường, giống dữ liệu gửi từ giao diện.
 def context_from(rows, anchor):
     return {"as_of": anchor, "hourly": {field: [row[field] for row in rows]
                                         for field in ("time", *VARIABLES)}}
 
 
+# [CHRONOS-TEST-004] Ghi lại từng lần dự báo và tạo ba phân vị quanh giá trị cuối của cửa sổ mẫu.
 class StubPipeline:
     def __init__(self):
         self.calls = []
@@ -52,6 +57,7 @@ class StubPipeline:
 
 
 class ChronosTests(unittest.TestCase):
+    # [CHRONOS-TEST-005] Thay bộ nạp trong từng bài để chạy ngoại tuyến và tự gỡ thay thế khi kết thúc.
     def setUp(self):
         self.rows = fixture()
         self.pipeline = StubPipeline()
@@ -59,6 +65,7 @@ class ChronosTests(unittest.TestCase):
         self.load = self.patch.start()
         self.addCleanup(self.patch.stop)
 
+    # [CHRONOS-TEST-006] Kiểm tra tập đối chiếu, cỡ lô và dữ liệu quá khứ đi vào từng cửa sổ dự báo.
     def test_same_holdout_and_separate_past_only_windows(self):
         updates = []
         rf = reference(self.rows)
@@ -85,6 +92,7 @@ class ChronosTests(unittest.TestCase):
                 count += 1
         self.assertEqual(count, len(rf["holdout"]))
 
+    # [CHRONOS-TEST-007] Giá trị ở giờ tương lai không đổi ba phân vị. Lần dự báo này chỉ dùng bộ nhớ đệm.
     def test_live_inference_excludes_future_weather_and_requests_cache_only(self):
         anchor = 190
         report = {"checkpoint_revision": CHECKPOINT_REVISION}
@@ -103,6 +111,7 @@ class ChronosTests(unittest.TestCase):
                                           second_calls["past_covariates"][field])
         self.load.assert_called_with(None, False)
 
+    # [CHRONOS-TEST-008] Cửa sổ bị thiếu nhiệt độ phải báo lỗi trước khi nạp mô hình.
     def test_window_gaps_require_contiguous_temperatures(self):
         anchor = 190
         rows = copy.deepcopy(self.rows)
@@ -111,6 +120,7 @@ class ChronosTests(unittest.TestCase):
             predict_next(context_from(rows, rows[anchor]["time"]), {"checkpoint_revision": CHECKPOINT_REVISION})
         self.load.assert_not_called()
 
+    # [CHRONOS-TEST-009] Thay nhiệt độ thực trong lịch sử để kiểm tra việc từ chối tập đối chiếu lệch nguồn.
     def test_rejects_reference_from_other_weather_data(self):
         rf = reference(self.rows)
         self.rows[175]["temperature_2m"] = 45

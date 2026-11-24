@@ -1,3 +1,4 @@
+// [RF-JS-TEST-000] Kiểm tra dữ liệu theo giờ mà giao diện gửi sang các mô hình dự báo.
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -25,6 +26,7 @@ function fixture() {
   };
 }
 
+// [RF-JS-TEST-002] Dữ liệu đầu vào dừng ở 23:00, còn dự báo đối chiếu của API có thể ở 00:00 ngày hôm sau.
 test("RF context excludes future data and preserves midnight API comparison separately", () => {
   const data = fixture();
   const result = modelInput(data);
@@ -36,6 +38,7 @@ test("RF context excludes future data and preserves midnight API comparison sepa
   assert.equal(JSON.stringify(result.context).includes("2025-01-03"), false);
 });
 
+// [RF-JS-TEST-003] Giữ null ở trường áp suất để mã phía mô hình tự xử lý dữ liệu thiếu.
 test("RF context preserves null rather than inventing weather inputs", () => {
   const data = fixture();
   data.hourly.surface_pressure[45] = null;
@@ -43,6 +46,7 @@ test("RF context preserves null rather than inventing weather inputs", () => {
   assert.equal(result.context.hourly.surface_pressure[45], null);
 });
 
+// [RF-JS-TEST-004] Yêu cầu dữ liệu cho Random Forest là yêu cầu riêng, gửi lại sớm thì dùng cache.
 test("RF input request uses past days without shifting the main daily forecast and uses cache", async () => {
   const original = globalThis.fetch;
   let calls = 0;
@@ -65,6 +69,7 @@ test("RF input request uses past days without shifting the main daily forecast a
   }
 });
 
+// [RF-JS-TEST-005] Holt–Winters chỉ cần nhiệt độ. Mảng gửi đi kết thúc đúng giờ dùng làm mốc dự báo.
 test("time-series input only sends past hourly temperatures through the reference hour", async () => {
   const original = globalThis.fetch;
   const data = fixture();

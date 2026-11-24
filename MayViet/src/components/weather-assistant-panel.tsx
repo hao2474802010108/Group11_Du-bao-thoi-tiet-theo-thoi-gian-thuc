@@ -1,3 +1,4 @@
+// [ASSIST-UI-001] Khung hỏi đáp gọi Qwen qua máy chủ Python và gửi kèm bản dự báo của địa điểm đang xem.
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Download, LoaderCircle, MessagesSquare, Send } from "lucide-react";
@@ -5,6 +6,7 @@ import { clockTime, shortDate } from "@/lib/weather";
 import type { Forecast, Place } from "@/lib/weather";
 import "../weather-assistant.css";
 
+// [ASSIST-UI-002] Phản hồi trạng thái cho biết có thể mở ô hỏi đáp hay cần chuẩn bị mô hình trước.
 type AssistantState = "idle" | "loading" | "ready" | "missing_dependencies" | "error";
 
 type AssistantStatus = {
@@ -13,6 +15,7 @@ type AssistantStatus = {
   message: string;
 };
 
+// [ASSIST-UI-003] Kết quả trả kèm nguồn, thời điểm dữ liệu và cách tạo câu trả lời để giao diện ghi nhãn.
 type AssistantResponse = {
   answer: string;
   model: string;
@@ -21,6 +24,7 @@ type AssistantResponse = {
   mode: "generated" | "reference";
 };
 
+// [ASSIST-UI-004] Các nút gợi ý điền câu hỏi vào ô nhập để người dùng có thể sửa trước khi gửi.
 const questions = [
   "Chiều nay có nên mang ô không?",
   "Bây giờ nhiệt độ và độ ẩm thế nào?",
@@ -35,11 +39,13 @@ const labels: Record<AssistantState, string> = {
   error: "Cần thử lại",
 };
 
+// [ASSIST-UI-005] Đọc trạng thái bằng GET. Chuẩn bị mô hình và gửi câu hỏi dùng POST với nội dung JSON.
 async function assistantRequest<Result>(
   endpoint: "status" | "prepare" | "ask",
   signal: AbortSignal,
   payload?: object,
 ): Promise<Result> {
+  // [ASSIST-UI-006] Hợp nhất tín hiệu hủy khi đổi giao diện với giới hạn chờ. Câu hỏi được chờ lâu hơn vì Qwen chạy trên máy.
   const controller = new AbortController();
   const abort = () => controller.abort();
   if (signal.aborted) abort();
@@ -54,6 +60,7 @@ async function assistantRequest<Result>(
       body: payload ? JSON.stringify(payload) : undefined,
       signal: controller.signal,
     });
+    // [ASSIST-UI-007] Trang HTML trả về thay JSON thường là dấu hiệu route trợ lý chưa đi qua app.py.
     if (!response.headers.get("content-type")?.includes("application/json")) {
       throw new Error("Mở bằng python app.py để dùng trợ lý thời tiết.");
     }
@@ -61,6 +68,7 @@ async function assistantRequest<Result>(
     if (!response.ok) throw new Error(value.error || "Chưa kết nối được trợ lý thời tiết.");
     return value;
   } catch (error) {
+    // [ASSIST-UI-008] Phân biệt hết thời gian chờ với thao tác hủy của giao diện để báo đúng lỗi.
     if (controller.signal.aborted && !signal.aborted) {
       throw new Error("Trợ lý phản hồi quá lâu. Hãy thử lại.");
     }
@@ -71,6 +79,7 @@ async function assistantRequest<Result>(
   }
 }
 
+// [ASSIST-UI-009] Nhận dự báo, địa điểm và đơn vị từ màn hình chính để phần hỏi đáp dùng đúng ngữ cảnh đang xem.
 export default function WeatherAssistantPanel({
   place,
   forecast,
@@ -82,6 +91,7 @@ export default function WeatherAssistantPanel({
   unit: "C" | "F";
   stale?: boolean;
 }) {
+  // [ASSIST-UI-010] Tách trạng thái tải mô hình với lần gửi câu hỏi để hai thao tác có thông báo riêng.
   const [status, setStatus] = useState<AssistantStatus | null>(null);
   const [statusError, setStatusError] = useState("");
   const [statusRevision, setStatusRevision] = useState(0);
@@ -95,6 +105,7 @@ export default function WeatherAssistantPanel({
   const input = useRef<HTMLTextAreaElement>(null);
   const ready = status?.state === "ready";
 
+  // [ASSIST-UI-011] Hỏi lại trạng thái mỗi 2 giây trong lúc máy chủ đang chuẩn bị Qwen.
   useEffect(() => {
     const controller = new AbortController();
     let nextPoll: number | undefined;
@@ -118,11 +129,13 @@ export default function WeatherAssistantPanel({
     };
   }, [statusRevision]);
 
+  // [ASSIST-UI-012] Hủy yêu cầu đang chờ khi rời khung để câu trả lời cũ không xuất hiện ở địa điểm mới.
   useEffect(() => () => {
     prepareRequest.current?.abort();
     askRequest.current?.abort();
   }, []);
 
+  // [ASSIST-UI-013] Khởi động việc chuẩn bị mô hình theo yêu cầu và bật lại lượt kiểm tra nếu máy chủ còn tải.
   async function prepare() {
     if (prepareRequest.current) return;
     const controller = new AbortController();
@@ -144,6 +157,7 @@ export default function WeatherAssistantPanel({
     }
   }
 
+  // [ASSIST-UI-014] Chỉ gửi khi mô hình sẵn sàng, có dự báo và chưa có câu hỏi khác đang chờ.
   async function ask(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!ready || !forecast || !question.trim() || askRequest.current) return;
@@ -153,6 +167,7 @@ export default function WeatherAssistantPanel({
     setAnswer(null);
     setAnswerError("");
     try {
+      // [ASSIST-UI-015] Kèm dữ liệu hiện tại, theo giờ, theo ngày và múi giờ để Python lọc theo nội dung câu hỏi.
       const reply = await assistantRequest<AssistantResponse>("ask", controller.signal, {
         question: question.trim(),
         place: place.name,
@@ -193,6 +208,7 @@ export default function WeatherAssistantPanel({
         </span>
       </header>
 
+      {/* [ASSIST-UI-016] Hiện lỗi kết nối hoặc nút chuẩn bị theo trạng thái mà máy chủ trả về. */}
       {statusError && (
         <div className="weather-assistant-notice" role="alert">
           <span>{statusError}</span>
@@ -213,6 +229,7 @@ export default function WeatherAssistantPanel({
         </div>
       )}
 
+      {/* [ASSIST-UI-017] Chỉ mở ô hỏi đáp sau khi Qwen sẵn sàng. Dữ liệu lưu cũ được thông báo ngay trong khung. */}
       {ready && (
         <form className="weather-assistant-form" onSubmit={ask}>
           {(!forecast || stale) && (
@@ -254,6 +271,7 @@ export default function WeatherAssistantPanel({
         </form>
       )}
 
+      {/* [ASSIST-UI-018] Ghi nguồn và mốc giờ dưới câu trả lời. Gợi ý theo dữ liệu có nhãn riêng với câu do Qwen sinh. */}
       <div aria-live="polite" aria-busy={asking}>
         {answerError && <p className="weather-assistant-notice" role="alert">{answerError}</p>}
         {answer && (

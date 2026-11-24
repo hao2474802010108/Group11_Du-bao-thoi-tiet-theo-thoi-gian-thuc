@@ -1,11 +1,16 @@
+# [IGNORE-000] Danh sách tệp và thư mục Git bỏ qua khi theo dõi dự án.
+# [IGNORE-001] Thư viện npm, kết quả build và dữ liệu tạm của TypeScript được tạo lại khi cần.
 node_modules/
 dist/
 *.tsbuildinfo
+# [IGNORE-002] Bỏ qua thiết lập riêng của máy và tệp log sinh ra khi dùng npm.
 .env
 .env.local
 npm-debug.log*
 .DS_Store
+# [IGNORE-003] Bỏ qua bytecode và môi trường ảo Python.
 __pycache__/
 *.py[cod]
 .venv/
+# [IGNORE-004] Trọng số Chronos và Qwen tải về nằm trong cache cục bộ.
 models/ai-cache/

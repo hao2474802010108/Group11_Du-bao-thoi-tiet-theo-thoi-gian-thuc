@@ -2,6 +2,7 @@
 
 Dữ liệu thật đi kèm ở data/history có URL nguồn, checksum và 8.760 dòng ERA5.
 """
+# [RF-TEST-000] Kiểm tra tính năng Random Forest, dữ liệu lịch sử và các API mô hình trên localhost.
 import copy
 import http.client
 import json
@@ -34,10 +35,12 @@ def fixture():
     return result
 
 
+# [RF-TEST-013] Chuyển các hàng theo giờ thành mảng theo trường, giống yêu cầu gửi từ giao diện.
 def payload(rows, anchor):
     return {"as_of": anchor, "hourly": {name: [r[name] for r in rows] for name in ["time", *ml.VARIABLES]}}
 
 
+# [RF-TEST-014] Huấn luyện một lần trên dữ liệu mẫu, rồi lưu bản riêng trong thư mục tạm cho từng bài.
 class ModelTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -110,6 +113,7 @@ class ModelTests(unittest.TestCase):
         self.assertTrue(first["stale"])
         self.assertEqual(first["target_time"], self.rows[201]["time"])
 
+    # [RF-TEST-015] Thiếu cửa sổ 25 giờ thì yêu cầu bị từ chối.
     def test_prediction_needs_enough_valid_input(self):
         context = payload(self.rows[190:201], self.rows[200]["time"])
         with self.assertRaisesRegex(ValueError, "25 giờ"):
@@ -121,11 +125,13 @@ class ModelTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "huấn luyện"):
             self.service.predict(21.0285, 105.8542, {})
 
+    # [RF-TEST-016] Từ chối tọa độ không hữu hạn, sai kiểu hoặc nằm ngoài khoảng cho phép.
     def test_bad_coordinates_are_rejected(self):
         for lat, lon in [(float("nan"), 106), (10, float("inf")), (True, 106), (999, 106)]:
             with self.subTest(lat=lat, lon=lon), self.assertRaises(ValueError):
                 ml.location(lat, lon)
 
+    # [RF-TEST-017] Bộ dữ liệu quá ít phải báo lỗi trước khi huấn luyện.
     def test_small_dataset_does_not_create_fake_model(self):
         with self.assertRaisesRegex(ValueError, "720"):
             ml.fit_model(self.rows[:100], self.lat, self.lon, {}, trees=2)
@@ -140,6 +146,7 @@ class ModelTests(unittest.TestCase):
             self.assertIsNone(self.service.load(self.key))
             loader.assert_not_called()
 
+    # [RF-TEST-018] Sửa CSV đã lưu và kiểm tra mã băm phát hiện nội dung thay đổi.
     def test_history_checksum_detects_changes(self):
         self.service.save_history(self.key, self.rows, {"end_date": "2025-03-01"})
         history = self.service.paths(self.key)["history"]
@@ -188,6 +195,7 @@ class ModelTests(unittest.TestCase):
             self.assertEqual(self.service.status(self.lat, self.lon)["state"], "ready")
 
 
+# [RF-HTTP-TEST-004] Chạy máy chủ trên một cổng tạm với dữ liệu riêng của bài kiểm tra.
 class MLHTTPTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -213,6 +221,7 @@ class MLHTTPTests(unittest.TestCase):
             thread.join(2)
         self.addCleanup(close)
 
+    # [RF-HTTP-TEST-005] Gửi yêu cầu HTTP thật, lấy mã trạng thái, tiêu đề và nội dung phản hồi.
     def request(self, method, path, payload=None, headers=None):
         connection = http.client.HTTPConnection(app.HOST, self.server.server_address[1], timeout=5)
         try:
@@ -234,6 +243,7 @@ class MLHTTPTests(unittest.TestCase):
         result = json.loads(data)
         self.assertAlmostEqual(result["temperature"], result["input_temperature"] + result["delta"])
 
+    # [RF-HTTP-TEST-006] Huấn luyện Holt–Winters qua API, chờ sẵn sàng rồi kiểm tra dự báo sau khi nạp lại.
     def test_time_series_train_and_predict(self):
         service = self.server.ml_service
         key, _, _ = ml.location(10.78, 106.7)
@@ -268,6 +278,7 @@ class MLHTTPTests(unittest.TestCase):
         self.assertEqual(prediction["target_time"], self.rows[201]["time"])
         self.assertAlmostEqual(prediction["temperature"], prediction["input_temperature"] + prediction["delta"])
 
+    # [RF-HTTP-TEST-007] Kiểm tra mã lỗi khi tham số sai, phương thức sai hoặc đường dẫn không tồn tại.
     def test_bad_request_and_unknown_route(self):
         self.assertEqual(self.request("GET", "/api/ml/status?latitude=NaN&longitude=106")[0], 400)
         self.assertEqual(self.request("GET", "/api/ml/train")[0], 405)
@@ -281,6 +292,7 @@ class MLHTTPTests(unittest.TestCase):
         self.assertEqual(self.request("POST", "/api/ml/train", data, {"Content-Type": "text/plain"})[0], 415)
         self.assertEqual(self.request("POST", "/api/ml/train", {}, {"Content-Type": "application/json", "Content-Length": "1000001"})[0], 413)
 
+    # [RF-HTTP-TEST-008] CSV xuất cho đúng tọa độ và có dấu UTF-8 BOM để mở bằng Excel.
     def test_export_is_csv_for_requested_model(self):
         status, headers, data = self.request("GET", "/api/ml/export?latitude=10.78&longitude=106.7")
         self.assertEqual(status, 200)

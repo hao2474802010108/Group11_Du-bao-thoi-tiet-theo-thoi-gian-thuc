@@ -1,3 +1,4 @@
+// [SERIES-UI-001] Một khung React dùng chung cho Holt–Winters, Gradient Boosting và Chronos‑2 Small.
 import { useEffect, useRef, useState } from "react";
 import { Activity, Layers, LoaderCircle, RefreshCw, Sparkles } from "lucide-react";
 import {
@@ -18,6 +19,7 @@ import "../time-series.css";
 
 type TemperatureUnit = "C" | "F";
 
+// [SERIES-UI-002] Báo cáo lịch sử gồm các điểm dùng để vẽ biểu đồ và sai số trên cả tập kiểm thử.
 type SeriesReport = {
   test_start_target: string;
   test_end_target: string;
@@ -36,6 +38,7 @@ type SeriesReport = {
   }[];
 };
 
+// [SERIES-UI-003] Trạng thái mô hình quyết định khi nào hiện nút huấn luyện, dự báo hoặc thông báo thiếu thư viện.
 type SeriesStatus = {
   state: "idle" | "training" | "ready" | "error" | "missing_dependencies";
   message: string;
@@ -43,6 +46,7 @@ type SeriesStatus = {
   model: SeriesReport | null;
 };
 
+// [SERIES-UI-004] as_of là giờ dữ liệu đầu vào cuối cùng, target_time là giờ cần dự báo. Hai cận chỉ có khi API trả khoảng dự báo.
 type SeriesPrediction = {
   as_of: string;
   target_time: string;
@@ -53,6 +57,7 @@ type SeriesPrediction = {
   upper?: number;
 };
 
+// [SERIES-UI-005] variant chọn tiêu đề, biểu tượng và hàm lấy đúng các cột thời tiết mà mô hình cần.
 const forecastPanels = {
   "time-series": {
     title: "Dự báo chuỗi thời gian (Time Series)", name: "Holt–Winters", Icon: Activity,
@@ -82,6 +87,7 @@ const statusText = {
   missing_dependencies: "Thiếu thư viện",
 };
 
+// [SERIES-UI-006] Tên variant cũng là tên route Python. Chronos được chờ lâu hơn khi dự báo lần đầu vì có thể cần tải trọng số.
 function postSeries<T>(
   variant: keyof typeof forecastPanels,
   route: "train" | "predict",
@@ -96,14 +102,17 @@ function postSeries<T>(
   }, variant === "chronos" && route === "predict" ? 180_000 : 15_000);
 }
 
+// [SERIES-UI-007] Dùng một kiểu hiển thị ngày giờ cho nhãn biểu đồ, mốc đầu vào và mốc dự báo.
 function dateAndTime(time: string) {
   return `${clockTime(time)} · ${shortDate(time)}`;
 }
 
+// [SERIES-UI-008] Ưu tiên thông báo từ lỗi mạng hoặc Python. Giá trị lỗi khác dùng câu mặc định của thao tác.
 function messageFor(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
 }
 
+// [SERIES-UI-009] Phần kiểm thử vẽ ERA5, Random Forest và mô hình đang xem trên cùng các mốc lịch sử.
 function SeriesBacktest({
   model,
   unit,
@@ -118,6 +127,7 @@ function SeriesBacktest({
     { key: "random_forest", label: "Random Forest", tone: "forest" },
     { key: "predicted", label: name, tone: "accent" },
   ] as const;
+  // [SERIES-UI-010] Giá trị nhiệt độ đổi C/F khi vẽ. Sai số là độ chênh nên sang °F chỉ nhân 1,8.
   const errorScale = unit === "F" ? 1.8 : 1;
   const chart = model.backtest.map((row) => ({
     time: row.time,
@@ -125,6 +135,7 @@ function SeriesBacktest({
     predicted: toTemp(row.predicted, unit),
     random_forest: toTemp(row.random_forest, unit),
   }));
+  // [SERIES-UI-011] Bảng sai số có thêm Persistence làm mốc so sánh theo quy tắc giờ sau bằng giờ trước.
   const rows = [
     { label: name, scores: model.metrics },
     { label: "Random Forest", scores: model.random_forest },
@@ -139,6 +150,7 @@ function SeriesBacktest({
         {dateAndTime(model.test_start_target)} đến{" "}
         {dateAndTime(model.test_end_target)}. Cả hai mô hình đều dự báo trước một giờ.
       </p>
+      {/* [SERIES-UI-012] Khi báo cáo có số đo thời gian và độ bao phủ P10–P90, hiển thị chúng cạnh số giờ kiểm thử. */}
       {model.inference_seconds != null && (
         <p className="time-series-meta">
           Thời gian dự báo toàn bộ tập kiểm thử trên máy đo {num(model.inference_seconds, 1)} giây.
@@ -236,6 +248,7 @@ function SeriesBacktest({
   );
 }
 
+// [SERIES-UI-013] Nhận vị trí, đơn vị và tên mô hình từ trang chính. Mặc định là khung Holt–Winters.
 export default function TimeSeriesPanel({
   place,
   unit,
@@ -247,6 +260,7 @@ export default function TimeSeriesPanel({
 }) {
   const { latitude, longitude } = place;
   const { title, name, Icon, description, trainText, fetchInput } = forecastPanels[variant];
+  // [SERIES-UI-014] Chronos chỉ dự báo sau khi bấm nút để tránh phải tải mô hình ngay khi mở trang.
   const manual = variant === "chronos";
   const [status, setStatus] = useState<SeriesStatus | null>(null);
   const [statusError, setStatusError] = useState("");
@@ -261,6 +275,7 @@ export default function TimeSeriesPanel({
   const busy = startingTraining || status?.state === "training";
   const unavailable = status?.state === "missing_dependencies";
 
+  // [SERIES-UI-015] Đọc trạng thái theo tọa độ. Trong lúc huấn luyện, hỏi lại sau 1,5 giây và dọn lượt hỏi khi đổi khung.
   useEffect(() => {
     const controller = new AbortController();
     const params = new URLSearchParams({ latitude: String(latitude), longitude: String(longitude) });
@@ -290,8 +305,10 @@ export default function TimeSeriesPanel({
     };
   }, [latitude, longitude, statusRevision, variant]);
 
+  // [SERIES-UI-016] Dừng chờ phản hồi yêu cầu huấn luyện ở trình duyệt khi khung cũ bị tháo.
   useEffect(() => () => trainingRequest.current?.abort(), []);
 
+  // [SERIES-UI-017] Khi đủ điều kiện dự báo, lấy dữ liệu đến giờ hiện tại từ Open-Meteo rồi chuyển cho Python tính giờ kế tiếp.
   useEffect(() => {
     if (!model || busy || unavailable || (manual && predictionRevision === 0)) return;
     const controller = new AbortController();
@@ -329,6 +346,7 @@ export default function TimeSeriesPanel({
     return () => controller.abort();
   }, [busy, fetchInput, latitude, longitude, manual, model, predictionRevision, unavailable, variant]);
 
+  // [SERIES-UI-018] Khóa lần khởi động trùng. Nếu Python còn xử lý, tăng statusRevision để tiếp tục theo dõi.
   async function train() {
     if (trainingRequest.current) return;
     const controller = new AbortController();
@@ -357,6 +375,7 @@ export default function TimeSeriesPanel({
     }
   }
 
+  // [SERIES-UI-019] Mỗi khung có nhãn xử lý phù hợp. Chronos đang kiểm thử mô hình có sẵn thay vì huấn luyện mới.
   const modelState = status?.state || "checking";
   const statusLabel = busy
     ? manual ? "Đang kiểm thử" : statusText.training
@@ -385,6 +404,7 @@ export default function TimeSeriesPanel({
         </span>
       </header>
 
+      {/* [SERIES-UI-020] Báo lỗi mạng, thiếu thư viện hoặc tiến độ. Nút kiểm tra lại yêu cầu đọc trạng thái mới. */}
       {statusError && (
         <div className="time-series-notice" role="alert">
           <p>{statusError}</p>
@@ -417,6 +437,7 @@ export default function TimeSeriesPanel({
         </div>
       )}
 
+      {/* [SERIES-UI-021] Kết quả giờ tới có thể chưa sẵn sàng trong khi báo cáo kiểm thử lịch sử vẫn xem được. */}
       {model && (
         <>
           {!unavailable && <div className="time-series-forecast">
@@ -434,6 +455,7 @@ export default function TimeSeriesPanel({
                   <p className="time-series-meta">
                     Dùng dữ liệu Open-Meteo đến {dateAndTime(prediction.as_of)} (GMT+7).
                   </p>
+                  {/* [SERIES-UI-022] Chỉ hiện khoảng P10–P90 khi dự báo có đủ cận dưới và cận trên. */}
                   {prediction.lower != null && prediction.upper != null && (
                     <p className="time-series-meta">
                       Khoảng dự báo P10–P90 {num(toTemp(prediction.lower, unit), 1)}–{num(toTemp(prediction.upper, unit), 1)}°{unit}.

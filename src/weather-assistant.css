@@ -1,3 +1,4 @@
+/* [QA-CSS-001] Kiểu khung Hỏi đáp thời tiết, gồm trạng thái Qwen, ô hỏi và câu trả lời. */
 .weather-assistant {
   --assistant-accent: #14637d;
   --assistant-tint: #e4f3f8;
@@ -7,11 +8,13 @@
   scroll-margin-top: 24px;
 }
 
+/* [QA-CSS-002] Dùng cặp màu nhấn sáng hơn để giữ tương phản trong giao diện tối. */
 :root[data-theme="dark"] .weather-assistant {
   --assistant-accent: #93daef;
   --assistant-tint: #193d4f;
 }
 
+/* [QA-CSS-003] Xếp biểu tượng, tiêu đề và nhãn trạng thái theo hàng ngang. */
 .weather-assistant-heading {
   display: flex;
   align-items: center;
@@ -43,6 +46,7 @@
   line-height: 1.6;
 }
 
+/* [QA-CSS-004] Tô màu nhãn riêng khi mô hình đã nạp và có thể nhận câu hỏi. */
 .weather-assistant-status {
   display: inline-flex;
   flex-shrink: 0;
@@ -63,6 +67,7 @@
   color: var(--assistant-accent);
 }
 
+/* [QA-CSS-005] Dùng chung khoảng cách cho thông báo chuẩn bị mô hình và khung câu trả lời. */
 .weather-assistant-notice,
 .weather-assistant-answer {
   margin: 16px 0 0;
@@ -83,6 +88,7 @@
 
 .weather-assistant-notice p { margin: 0; }
 
+/* [QA-CSS-006] Ô nhập chiếm chiều ngang của thẻ và có thể kéo cao thêm. */
 .weather-assistant-form {
   display: grid;
   margin-top: 16px;
@@ -111,6 +117,7 @@
 
 .weather-assistant-form textarea::placeholder { color: var(--subtle); }
 
+/* [QA-CSS-007] Các câu hỏi gợi ý và nút gửi xuống dòng khi hàng ngang hết chỗ. */
 .weather-assistant-actions {
   display: flex;
   align-items: flex-start;
@@ -125,6 +132,7 @@
   gap: 6px;
 }
 
+/* [QA-CSS-008] Nút gửi và nút gợi ý dùng cùng bộ màu. Câu hỏi gợi ý có hình dạng gọn hơn. */
 .weather-assistant-button,
 .weather-assistant-example {
   display: inline-flex;
@@ -155,6 +163,7 @@
   border-color: var(--assistant-accent);
 }
 
+/* [QA-CSS-009] Thêm viền rõ khi người dùng dùng bàn phím để chuyển giữa các điều khiển. */
 .weather-assistant-button:focus-visible,
 .weather-assistant-example:focus-visible,
 .weather-assistant-form textarea:focus-visible {
@@ -175,6 +184,7 @@
   font-size: 14px;
 }
 
+/* [QA-CSS-010] Giữ các xuống dòng trong câu trả lời và ngắt từ quá dài để thẻ không tràn ngang. */
 .weather-assistant-answer p {
   margin: 4px 0 8px;
   overflow-wrap: anywhere;
@@ -183,6 +193,7 @@
 
 .weather-assistant-answer small { color: var(--subtle); }
 
+/* [QA-CSS-011] Trên điện thoại, đưa nhãn trạng thái xuống hàng và đặt nút gửi về bên phải. */
 @media (max-width: 520px) {
   .weather-assistant-heading {
     display: grid;

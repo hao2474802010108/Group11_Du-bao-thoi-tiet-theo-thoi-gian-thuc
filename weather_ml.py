@@ -4,6 +4,7 @@ Không thay thế dự báo khí tượng Open-Meteo. Nhãn huấn luyện là E
 không phải số đo trạm tại nhà người dùng. Xem PHUONG_PHAP_RANDOM_FOREST.md.
 """
 
+# [RF-028] File này lấy lịch sử ERA5, tạo đặc trưng, huấn luyện Random Forest và cung cấp các hàm dùng chung cho mô hình nhiệt độ.
 from __future__ import annotations
 
 import csv
@@ -21,7 +22,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
-# [RF-001] Các thư viện ML được cài qua requirements.txt; app.py chỉ nạp module này khi dùng chức năng ML.
+# [RF-001] Các thư viện ML được cài qua requirements.txt. app.py chỉ import module này khi gọi một API dùng mô hình.
 import joblib
 import numpy as np
 import sklearn
@@ -70,6 +71,7 @@ def hour(value: object) -> datetime:
     return result
 
 
+# [RF-029] Xuất mốc giờ theo định dạng có phút, thống nhất với dữ liệu và biểu đồ phía giao diện.
 def iso(value: datetime) -> str:
     return value.isoformat(timespec="minutes")
 
@@ -152,12 +154,12 @@ def supervised(rows: list[dict]) -> tuple[np.ndarray, np.ndarray, np.ndarray, li
 
 # [RF-010] Đánh giá trên nhiệt độ °C, không phải delta; R² không có ý nghĩa khi nhãn gần như không đổi nên trả None.
 def scores(actual: np.ndarray, predicted: np.ndarray) -> dict:
-    errors = actual - predicted
-    denominator = float(np.sum((actual - actual.mean()) ** 2))
+    errors = actual - predicted  # Sai lệch ở từng giờ kiểm thử.
+    denominator = float(np.sum((actual - actual.mean()) ** 2))  # Độ biến thiên của số liệu thực để tính R².
     return {
-        "mae": float(np.abs(errors).mean()),
-        "rmse": float(np.sqrt(np.mean(errors ** 2))),
-        "r2": float(1 - np.sum(errors ** 2) / denominator) if denominator > 1e-12 else None,
+        "mae": float(np.abs(errors).mean()),  # Trung bình độ lớn sai số, tính bằng °C.
+        "rmse": float(np.sqrt(np.mean(errors ** 2))),  # Sai lệch lớn có ảnh hưởng mạnh hơn.
+        "r2": float(1 - np.sum(errors ** 2) / denominator) if denominator > 1e-12 else None,  # Bỏ R² khi nhiệt độ gần như cố định.
     }
 
 
@@ -221,7 +223,7 @@ def fit_model(rows: list[dict], lat: float, lon: float, source: dict, trees: int
     return {"schema": SCHEMA, "model": final_model, "report": report, "holdout": holdout}
 
 
-# [RF-015] Ghi file tạm rồi replace: đang tải trang hoặc mất điện không làm người đọc thấy nửa file.
+# [RF-015] Ghi vào tệp tạm rồi thay tệp đích bằng thao tác nguyên tử để người đọc không thấy nội dung đang được ghi.
 def atomic_bytes(path: Path, content: bytes) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(path.name + f".{threading.get_ident()}.tmp")
@@ -232,6 +234,7 @@ def atomic_bytes(path: Path, content: bytes) -> None:
         temporary.unlink(missing_ok=True)
 
 
+# [RF-030] Đổi dữ liệu báo cáo thành JSON UTF-8 trước khi ghi tệp nguyên tử.
 def json_bytes(value: object) -> bytes:
     return json.dumps(value, ensure_ascii=False, allow_nan=False, indent=2).encode("utf-8")
 
@@ -245,6 +248,7 @@ def csv_bytes(rows: list[dict], fields: list[str]) -> bytes:
     return stream.getvalue().encode("utf-8-sig")
 
 
+# [RF-031] Dịch vụ giữ trạng thái tác vụ và cache các tệp Random Forest theo tọa độ.
 class MLService:
     # [RF-017] Chỉ dùng các đường dẫn tự dựng theo tọa độ. RAM giữ tối đa 4 model; các model khác còn trên đĩa.
     def __init__(self, root: Path) -> None:
@@ -254,6 +258,7 @@ class MLService:
         self.loaded: OrderedDict[str, tuple[int, dict]] = OrderedDict()
         self.active: str | None = None
 
+    # [RF-032] Tạo đường dẫn CSV lịch sử, metadata nguồn, mô hình joblib, báo cáo và CSV kiểm thử của một địa điểm.
     def paths(self, key: str) -> dict[str, Path]:
         return {
             "history": self.root / "data" / "history" / f"{key}.csv",
@@ -276,6 +281,7 @@ class MLService:
             payload["hourly"][name] = [r.get(name) or None for r in raw]
         return rows_from_hourly(payload), source
 
+    # [RF-033] Ghi dữ liệu lịch sử cùng mã kiểm tra SHA-256 và số dòng để phát hiện tệp đã bị thay đổi.
     def save_history(self, key: str, rows: list[dict], source: dict) -> None:
         paths = self.paths(key)
         encoded = csv_bytes(rows, ["time", *VARIABLES])
@@ -294,6 +300,7 @@ class MLService:
                 return rows, source
         except (OSError, ValueError, KeyError):
             pass
+        # [RF-034] Đọc thời điểm được phép gọi lại nguồn lịch sử. Lưu giới hạn vào đĩa để lần chạy sau vẫn biết phải chờ.
         rate_file = self.root / "data" / "archive_retry.json"
         try:
             blocked = float(json.loads(rate_file.read_text())["until"])
@@ -355,6 +362,7 @@ class MLService:
         report = {"schema": SCHEMA, **artifact["report"], "artifact_sha256": hashlib.sha256(paths["model"].read_bytes()).hexdigest()}
         atomic_bytes(paths["report"], json_bytes(report))
         atomic_bytes(paths["backtest"], csv_bytes(artifact["holdout"], ["time", "actual", "predicted", "baseline", "absolute_error"]))
+        # [RF-035] Xóa bản giữ trong RAM sau khi ghi mô hình mới để yêu cầu sau dùng đúng tệp hiện tại.
         with self.lock:
             self.loaded.pop(key, None)
 
@@ -363,6 +371,7 @@ class MLService:
         paths = self.paths(key)
         if not paths["model"].is_file() or not paths["report"].is_file():
             return None
+        # [RF-036] Dấu thời gian sửa tệp cho biết có thể dùng bản trong RAM hay phải đọc lại từ đĩa.
         timestamp = paths["model"].stat().st_mtime_ns
         with self.lock:
             cached = self.loaded.get(key)
@@ -373,6 +382,7 @@ class MLService:
         if (meta.get("sklearn_version") != sklearn.__version__ or meta.get("numpy_version") != np.__version__
                 or meta.get("joblib_version") != joblib.__version__ or meta.get("schema") != SCHEMA):
             return None
+        # [RF-037] Đối chiếu mã kiểm tra với báo cáo trước khi mở joblib, rồi xác nhận đúng loại mô hình.
         if hashlib.sha256(paths["model"].read_bytes()).hexdigest() != meta.get("artifact_sha256"):
             raise ValueError("File model hỏng hoặc bị đổi. Hãy huấn luyện lại từ CSV lịch sử.")
         artifact = joblib.load(paths["model"])
@@ -385,7 +395,7 @@ class MLService:
                 self.loaded.popitem(last=False)
         return artifact
 
-    # [RF-023] Trạng thái không tự tải API/huấn luyện; chuyển địa điểm không tạo tác vụ CPU hoặc request lịch sử ngoài ý muốn.
+    # [RF-023] API trạng thái đọc kết quả đã có. Chỉ yêu cầu huấn luyện mới khởi động tác vụ và lấy lịch sử nếu cần.
     def status(self, latitude: object, longitude: object) -> dict:
         key, lat, lon = location(latitude, longitude)
         with self.lock:
@@ -422,6 +432,7 @@ class MLService:
         threading.Thread(target=self._train_job, args=(key, lat, lon, prefer_local_history), daemon=True).start()
         return self.status(lat, lon)
 
+    # [RF-038] Chạy huấn luyện nền. Có thể ưu tiên lịch sử cục bộ khi cần bộ kiểm thử cho các mô hình so sánh.
     def _train_job(self, key: str, lat: float, lon: float, prefer_local_history: bool) -> None:
         try:
             notice = ""
@@ -440,6 +451,7 @@ class MLService:
                         raise error
                     prepared = self.history(key)
                     notice = f" Dùng lịch sử đã lưu vì nguồn chưa cập nhật được ({error})."
+            # [RF-039] Tạo mô hình, lưu kết quả và trả trạng thái sẵn sàng. Nhánh xử lý lỗi bên dưới giữ thông báo để người dùng đọc.
             rows, source = prepared
             with self.lock:
                 self.jobs[key] = {"state": "training", "message": "Đang fit Random Forest và kiểm thử 20% cuối theo thời gian…"}

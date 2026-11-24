@@ -214,6 +214,7 @@ export async function fetchForecast(
   return { ...value, fetchedAt: new Date(receivedAt).toISOString() };
 }
 
+// [API-051] Dữ liệu đầu vào mô hình gồm một trục giờ và một mảng số liệu cho mỗi cột được yêu cầu.
 type HourlyContext<Field extends string> = { time: string[] } & Record<
   Field,
   (number | null)[]
@@ -223,6 +224,7 @@ type ContextForecast<Field extends string> = {
   hourly: HourlyContext<Field>;
 };
 
+// [API-052] Random Forest, Gradient Boosting và Chronos lấy cùng năm chỉ số thời tiết theo giờ.
 const RF_FIELDS = [
   "temperature_2m",
   "relative_humidity_2m",
@@ -232,6 +234,7 @@ const RF_FIELDS = [
 ] as const;
 type RFField = (typeof RF_FIELDS)[number];
 
+// [API-053] Lấy dữ liệu riêng cho mô hình từ Open-Meteo và kiểm tra các cột có đủ phần tử tương ứng với trục giờ.
 async function fetchHourlyContext<Field extends string>(
   latitude: number,
   longitude: number,
@@ -264,8 +267,8 @@ async function fetchHourlyContext<Field extends string>(
   return value;
 }
 
+// [API-054] Làm tròn mốc thời gian hiện tại xuống đầu giờ Việt Nam và tìm điểm cắt trong mảng giờ.
 function contextAnchor(data: ContextForecast<"temperature_2m">) {
-  // Open-Meteo trả thời gian Việt Nam cho cả mốc hiện tại và mảng theo giờ.
   const asOf = `${data.current.time.slice(0, 13)}:00`;
   const index = data.hourly.time.indexOf(asOf);
   if (index < 0 || data.hourly.time.slice(0, index).some((time) => time >= asOf))
@@ -273,15 +276,18 @@ function contextAnchor(data: ContextForecast<"temperature_2m">) {
   return { asOf, end: index + 1 };
 }
 
+// [API-055] Lấy ba ngày trước cho Random Forest và Gradient Boosting. Phần tương lai được cắt trước khi gửi Python.
 export function fetchModelContext(latitude: number, longitude: number, force = false) {
   return fetchHourlyContext(latitude, longitude, RF_FIELDS, 3, 2, force);
 }
 
+// [API-056] Chronos lấy lịch sử dài hơn và chỉ dùng gói dữ liệu đến mốc hiện tại.
 export async function fetchChronosInput(latitude: number, longitude: number, force = false) {
   const forecast = await fetchHourlyContext(latitude, longitude, RF_FIELDS, 7, 1, force);
   return modelInput(forecast).context;
 }
 
+// [API-057] Cắt đồng thời các cột đến cùng một mốc. Nhiệt độ giờ sau lấy từ API chỉ để đối chiếu trên giao diện.
 export function modelInput(data: ContextForecast<RFField>) {
   const { asOf, end } = contextAnchor(data);
   const { hourly } = data;
@@ -303,6 +309,7 @@ export function modelInput(data: ContextForecast<RFField>) {
   };
 }
 
+// [API-058] Holt–Winters chỉ cần một chuỗi nhiệt độ. Cắt bỏ các giờ sau mốc hiện tại.
 export async function fetchTimeSeriesInput(
   latitude: number,
   longitude: number,

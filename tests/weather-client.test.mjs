@@ -1,4 +1,4 @@
-// [TEST-API-000] KIỂM THỬ HỒI QUY: dữ liệu fixture/fetch giả chỉ dùng trong test, không phải dữ liệu hiển thị của ứng dụng.
+// [TEST-API-000] Kiểm tra cách tầng dữ liệu gọi API, lưu cache và xử lý giới hạn số lượt gọi.
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -17,7 +17,7 @@ const fixture = {
 };
 const originalFetch = globalThis.fetch;
 const originalNow = Date.now;
-// Sau mỗi bài, khôi phục fetch và đồng hồ thật để không ảnh hưởng bài kế tiếp.
+// [TEST-API-007] Sau mỗi bài, khôi phục fetch và đồng hồ thật để bài kế tiếp chạy độc lập.
 test.afterEach(() => {
   globalThis.fetch = originalFetch;
   Date.now = originalNow;
