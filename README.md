@@ -6,6 +6,7 @@ Mây Việt là đồ án dự báo thời tiết cho các địa điểm ở Vi
 
 Giải nén toàn bộ gói rồi mở PowerShell trong thư mục `MayViet`. Thư mục `dist/` nằm cạnh `app.py`. Nên dùng Python 3.12 hoặc 3.13 để dùng các mô hình TP.HCM đi kèm.
 
+<<<<<<< HEAD
 ```powershell
 python -m pip install -r requirements.txt
 python app.py
@@ -14,6 +15,11 @@ python app.py
 Nếu Windows dùng lệnh `py`, thay `python` bằng `py` trong các lệnh trên. Trình duyệt thường mở ở `http://localhost:5173`. Nếu cổng đó đang bận, mở địa chỉ được in trong PowerShell. Giữ cửa sổ PowerShell mở khi dùng app, nhấn **Ctrl+C** để dừng.
 
 ### Chạy Full chức năng
+=======
+python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.8.0
+python -m pip install -r requirements-ai.txt
+python app.py
+>>>>>>> f729c1181c2b78d202aee82636cea9a186bd9396
 
 Dùng Python 3.12 hoặc 3.13. Cài thêm PyTorch bản CPU và các thư viện AI trong cùng môi trường Python rồi khởi động lại app.
 
