@@ -89,6 +89,19 @@ class ModelTests(unittest.TestCase):
         report = self.artifact["report"]
         self.assertLess(ml.hour(report["train_end_target"]), ml.hour(report["test_start_anchor"]))
         self.assertEqual(report["train_samples"] + report["test_samples"] + 1, report["supervised_samples"])
+        validation = report["validation"]
+        self.assertEqual(
+            validation["candidate_train_samples"] + validation["gap_samples"] + validation["validation_samples"],
+            report["train_samples"],
+        )
+        self.assertLess(
+            ml.hour(validation["candidate_train_end_target"]),
+            ml.hour(validation["validation_start_target"]) - timedelta(hours=1),
+        )
+        self.assertEqual(validation["validation_end_target"], report["train_end_target"])
+        self.assertEqual(validation["mae"], min(candidate["mae"] for candidate in validation["candidates"]))
+        self.assertEqual(validation["selected"], report["parameters"])
+        self.assertEqual(self.artifact["model"].max_depth, validation["selected"]["max_depth"])
 
     # [RF-TEST-006] Tự tính lại MAE/RMSE từ holdout xuất CSV; baseline đúng là nhiệt độ giờ trước.
     def test_metrics_are_computed_from_held_out_predictions(self):

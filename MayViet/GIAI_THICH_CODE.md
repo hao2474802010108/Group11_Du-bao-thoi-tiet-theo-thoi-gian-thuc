@@ -25,10 +25,10 @@ Trong VS Code, mở tệp và nhấn **Ctrl+G** để tới số dòng. Dòng c�
 
 | Tệp | Công dụng |
 | --- | --- |
-| [weather_ml.py](#tep-weather-ml-py) | Đọc ERA5, tạo đặc trưng, huấn luyện và dự báo bằng Random Forest. |
+| [weather_ml.py](#tep-weather-ml-py) | Đọc ERA5, tạo đặc trưng, chọn độ sâu cây bằng validation và dự báo bằng Random Forest. |
 | [train_model.py](#tep-train-model-py) | Chạy huấn luyện Random Forest từ terminal, dùng ERA5 trên mạng hoặc CSV đã lưu. |
 | [weather_series.py](#tep-weather-series-py) | Dự báo nhiệt độ bằng Holt–Winters cộng tính với chu kỳ 24 giờ. |
-| [weather_boosting.py](#tep-weather-boosting-py) | Huấn luyện và dự báo bằng Histogram Gradient Boosting. |
+| [weather_boosting.py](#tep-weather-boosting-py) | Chọn số vòng lặp bằng validation, huấn luyện và dự báo bằng Histogram Gradient Boosting. |
 | [weather_chronos.py](#tep-weather-chronos-py) | Nạp Chronos‑2 Small và dự báo trung vị cùng khoảng P10–P90. |
 | [weather_assistant.py](#tep-weather-assistant-py) | Chọn số liệu phù hợp với câu hỏi và gọi Qwen chạy trên máy. |
 | [time_series_service.py](#tep-time-series-service-py) | Điều phối huấn luyện, kiểm thử, lưu kết quả và gọi dự báo cho ba mô hình bổ sung. |
@@ -43,6 +43,9 @@ Trong VS Code, mở tệp và nhấn **Ctrl+G** để tới số dòng. Dòng c�
 | [models/vn_10p78_106p70.gradient-boosting.joblib](models/vn_10p78_106p70.gradient-boosting.joblib) | Mô hình Gradient Boosting đã huấn luyện, lưu ở dạng nhị phân. |
 | [models/vn_10p78_106p70.chronos.json](#tep-models-vn-10p78-106p70-chronos-json) | Phiên bản checkpoint, sai số và độ bao phủ của khoảng dự báo Chronos. |
 | [reports/vn_10p78_106p70_holdout.csv](#tep-reports-vn-10p78-106p70-holdout-csv) | Kết quả từng giờ của Random Forest trên tập kiểm thử. |
+| [evaluate_report.py](evaluate_report.py) | Tính lại các bảng, kiểm định Diebold–Mariano và hình từ dữ liệu và mô hình TP.HCM đi kèm. |
+| [reports/validation_analysis/analysis.json](#tep-reports-validation-analysis-analysis-json) | Số liệu chính xác dùng để trình bày các bảng và hình trong báo cáo. |
+| [reports/validation_analysis/holdout_predictions.csv](#tep-reports-validation-analysis-holdout-predictions-csv) | Dự báo đối chiếu trên 1.747 mốc test, với 72 mốc cuối của Chronos. |
 
 ## Giao diện và tài nguyên
 
@@ -314,49 +317,51 @@ Danh sách phiên bản phụ thuộc do npm khóa để các máy cài cùng m�
 <a id="tep-weather-ml-py"></a>
 ### [weather_ml.py](weather_ml.py)
 
-Đọc ERA5, tạo đặc trưng, huấn luyện và dự báo bằng Random Forest.
+Đọc ERA5, tạo đặc trưng, chọn độ sâu cây bằng validation và dự báo bằng Random Forest.
 
 | Ghi chú | Dòng | Đoạn code làm gì |
 | --- | ---: | --- |
 | `RF-028` | 7 | File này lấy lịch sử ERA5, tạo đặc trưng, huấn luyện Random Forest và cung cấp các hàm dùng chung cho mô hình nhiệt độ. |
-| `RF-001` | 25 | Các thư viện ML được cài qua requirements.txt. app.py chỉ import module này khi gọi một API dùng mô hình. |
-| `RF-002` | 37 | Thứ tự tên phải khớp tuyệt đối với vector trong _features_at; không đưa nhiệt độ tương lai vào đầu vào. |
-| `RF-003` | 51 | Tọa độ được kiểm tra và làm tròn 2 chữ số (~1 km); mỗi khu vực có mô hình riêng, không dùng model TP.HCM cho Hà Nội. |
-| `RF-004` | 62 | Chuỗi API đang dùng giờ Việt Nam; chuyển về datetime không tz nhưng luôn hiểu là GMT+7. |
-| `RF-029` | 74 | Xuất mốc giờ theo định dạng có phút, thống nhất với dữ liệu và biểu đồ phía giao diện. |
-| `RF-005` | 79 | Thiếu/NaN/vô cực/ngoài giới hạn thì giữ None; không thay bằng số 0 hoặc nội suy bằng dữ liệu tương lai. |
-| `RF-006` | 90 | Kiểm tra các mảng cùng chiều dài, thời gian tăng đều và không trùng. Khoảng thiếu giờ được giữ để loại cửa sổ liên quan. |
-| `RF-007` | 112 | Một mẫu dùng 25 mốc từ t-24 đến t. Tra bằng timestamp để khoảng trống không bị hiểu nhầm là trễ đúng một giờ. |
-| `RF-008` | 120 | Giờ/ngày của mốc cần dự đoán là lịch đã biết, không phải dữ liệu thời tiết tương lai. |
-| `RF-009` | 136 | X chỉ dùng quá khứ/hiện tại; y_delta = T(t+1)-T(t). Dự báo cuối cùng cộng delta trở lại T(t). |
-| `RF-010` | 155 | Đánh giá trên nhiệt độ °C, không phải delta; R² không có ý nghĩa khi nhãn gần như không đổi nên trả None. |
-| `RF-011` | 166 | Có random_state cố định, giới hạn độ sâu và min_samples_leaf để giảm quá khớp; tối đa 4 luồng CPU. |
-| `RF-012` | 174 | Chia 80/20 theo thời gian, bỏ một mẫu ở biên. Không shuffle, không chọn tham số bằng tập kiểm thử. |
-| `RF-013` | 185 | Model đánh giá chỉ học phần train. Baseline Persistence luôn đoán T(t+1)=T(t). |
-| `RF-014` | 198 | Sau khi chốt kết quả holdout, fit model triển khai trên toàn bộ lịch sử. Không tính lại điểm bằng model đã học holdout. |
-| `RF-015` | 226 | Ghi vào tệp tạm rồi thay tệp đích bằng thao tác nguyên tử để người đọc không thấy nội dung đang được ghi. |
-| `RF-030` | 237 | Đổi dữ liệu báo cáo thành JSON UTF-8 trước khi ghi tệp nguyên tử. |
-| `RF-016` | 242 | CSV có UTF-8 BOM để tên tiếng Việt đọc được bằng Excel; các số liệu gốc vẫn giữ đơn vị °C/kmh/hPa. |
-| `RF-031` | 251 | Dịch vụ giữ trạng thái tác vụ và cache các tệp Random Forest theo tọa độ. |
-| `RF-017` | 253 | Chỉ dùng các đường dẫn tự dựng theo tọa độ. RAM giữ tối đa 4 model; các model khác còn trên đĩa. |
-| `RF-032` | 261 | Tạo đường dẫn CSV lịch sử, metadata nguồn, mô hình joblib, báo cáo và CSV kiểm thử của một địa điểm. |
-| `RF-018` | 271 | Lịch sử lưu cục bộ có thể dùng để huấn luyện offline; không đọc pickle từ URL hoặc file người ngoài cung cấp. |
-| `RF-033` | 284 | Ghi dữ liệu lịch sử cùng mã kiểm tra SHA-256 và số dòng để phát hiện tệp đã bị thay đổi. |
-| `RF-019` | 292 | API cố định ERA5, 365 ngày, kết thúc trước hiện tại 7 ngày để tránh vùng lịch sử chưa hoàn tất. |
-| `RF-034` | 303 | Đọc thời điểm được phép gọi lại nguồn lịch sử. Lưu giới hạn vào đĩa để lần chạy sau vẫn biết phải chờ. |
-| `RF-020` | 325 | Tôn trọng Retry-After dạng giây hoặc HTTP-date, không tự gửi lại liên tục. |
-| `RF-021` | 352 | Artifact chứa model thật và kết quả đánh giá; metrics JSON/holdout CSV là bản đọc được cho báo cáo. |
-| `RF-035` | 365 | Xóa bản giữ trong RAM sau khi ghi mô hình mới để yêu cầu sau dùng đúng tệp hiện tại. |
-| `RF-022` | 369 | Không nạp artifact khác phiên bản sklearn/NumPy/joblib: refit CSV để tránh pickle không tương thích. |
-| `RF-036` | 374 | Dấu thời gian sửa tệp cho biết có thể dùng bản trong RAM hay phải đọc lại từ đĩa. |
-| `RF-037` | 385 | Đối chiếu mã kiểm tra với báo cáo trước khi mở joblib, rồi xác nhận đúng loại mô hình. |
-| `RF-023` | 398 | API trạng thái đọc kết quả đã có. Chỉ yêu cầu huấn luyện mới khởi động tác vụ và lấy lịch sử nếu cần. |
-| `RF-024` | 419 | Khóa ngăn hai lượt train cùng lúc. Tác vụ chạy nền nên trang và dự báo API vẫn sử dụng được. |
-| `RF-038` | 435 | Chạy huấn luyện nền. Có thể ưu tiên lịch sử cục bộ khi cần bộ kiểm thử cho các mô hình so sánh. |
-| `RF-025` | 449 | Nếu nguồn trực tuyến lỗi, dùng lịch sử thật đã lưu. |
-| `RF-039` | 454 | Tạo mô hình, lưu kết quả và trả trạng thái sẵn sàng. Nhánh xử lý lỗi bên dưới giữ thông báo để người dùng đọc. |
-| `RF-026` | 469 | Chỉ giữ dữ liệu <= as_of trước khi tạo đặc trưng. Thay giá trị tương lai trong request không đổi kết quả RF. |
-| `RF-027` | 493 | Xuất CSV đúng model đang chọn; endpoint không nhận tên đường dẫn từ trình duyệt. |
+| `RF-001` | 26 | Các thư viện ML được cài qua requirements.txt. app.py chỉ import module này khi gọi một API dùng mô hình. |
+| `RF-002` | 38 | Thứ tự tên phải khớp tuyệt đối với vector trong _features_at; không đưa nhiệt độ tương lai vào đầu vào. |
+| `RF-003` | 53 | Tọa độ được kiểm tra và làm tròn 2 chữ số (~1 km); mỗi khu vực có mô hình riêng, không dùng model TP.HCM cho Hà Nội. |
+| `RF-004` | 64 | Chuỗi API đang dùng giờ Việt Nam; chuyển về datetime không tz nhưng luôn hiểu là GMT+7. |
+| `RF-029` | 76 | Xuất mốc giờ theo định dạng có phút, thống nhất với dữ liệu và biểu đồ phía giao diện. |
+| `RF-005` | 81 | Thiếu/NaN/vô cực/ngoài giới hạn thì giữ None; không thay bằng số 0 hoặc nội suy bằng dữ liệu tương lai. |
+| `RF-006` | 92 | Kiểm tra các mảng cùng chiều dài, thời gian tăng đều và không trùng. Khoảng thiếu giờ được giữ để loại cửa sổ liên quan. |
+| `RF-007` | 114 | Một mẫu dùng 25 mốc từ t-24 đến t. Tra bằng timestamp để khoảng trống không bị hiểu nhầm là trễ đúng một giờ. |
+| `RF-008` | 122 | Giờ/ngày của mốc cần dự đoán là lịch đã biết, không phải dữ liệu thời tiết tương lai. |
+| `RF-009` | 138 | X chỉ dùng quá khứ/hiện tại; y_delta = T(t+1)-T(t). Dự báo cuối cùng cộng delta trở lại T(t). |
+| `RF-010` | 157 | Đánh giá trên nhiệt độ °C, không phải delta; R² không có ý nghĩa khi nhãn gần như không đổi nên trả None. |
+| `RF-011` | 168 | Giữ seed cố định và tối đa bốn luồng CPU. Tập validation chọn độ sâu của cây. |
+| `RF-040` | 188 | Bỏ một mẫu ở biên để nhãn cuối của train có trước giờ neo đầu của validation. |
+| `RF-041` | 210 | Khi MAE bằng nhau, ưu tiên cấu hình xuất hiện trước trong danh sách. |
+| `RF-012` | 227 | Giữ nguyên 20% cuối làm test. Chọn tham số trong 80% đầu, rồi huấn luyện lại trước biên test. |
+| `RF-013` | 246 | Mô hình đánh giá học lại trên toàn bộ dữ liệu trước test, trừ một mẫu ở biên test. |
+| `RF-014` | 258 | Sau khi chốt kết quả holdout, fit model triển khai trên toàn bộ lịch sử. Không tính lại điểm bằng model đã học holdout. |
+| `RF-015` | 286 | Ghi vào tệp tạm rồi thay tệp đích bằng thao tác nguyên tử để người đọc không thấy nội dung đang được ghi. |
+| `RF-030` | 297 | Đổi dữ liệu báo cáo thành JSON UTF-8 trước khi ghi tệp nguyên tử. |
+| `RF-016` | 302 | CSV có UTF-8 BOM để tên tiếng Việt đọc được bằng Excel; các số liệu gốc vẫn giữ đơn vị °C/kmh/hPa. |
+| `RF-031` | 311 | Dịch vụ giữ trạng thái tác vụ và cache các tệp Random Forest theo tọa độ. |
+| `RF-017` | 313 | Chỉ dùng các đường dẫn tự dựng theo tọa độ. RAM giữ tối đa 4 model; các model khác còn trên đĩa. |
+| `RF-032` | 321 | Tạo đường dẫn CSV lịch sử, metadata nguồn, mô hình joblib, báo cáo và CSV kiểm thử của một địa điểm. |
+| `RF-018` | 331 | Lịch sử lưu cục bộ có thể dùng để huấn luyện offline; không đọc pickle từ URL hoặc file người ngoài cung cấp. |
+| `RF-033` | 344 | Ghi dữ liệu lịch sử cùng mã kiểm tra SHA-256 và số dòng để phát hiện tệp đã bị thay đổi. |
+| `RF-019` | 352 | API cố định ERA5, 365 ngày, kết thúc trước hiện tại 7 ngày để tránh vùng lịch sử chưa hoàn tất. |
+| `RF-034` | 363 | Đọc thời điểm được phép gọi lại nguồn lịch sử. Lưu giới hạn vào đĩa để lần chạy sau vẫn biết phải chờ. |
+| `RF-020` | 385 | Tôn trọng Retry-After dạng giây hoặc HTTP-date, không tự gửi lại liên tục. |
+| `RF-021` | 412 | Artifact chứa model thật và kết quả đánh giá; metrics JSON/holdout CSV là bản đọc được cho báo cáo. |
+| `RF-035` | 425 | Xóa bản giữ trong RAM sau khi ghi mô hình mới để yêu cầu sau dùng đúng tệp hiện tại. |
+| `RF-022` | 429 | Không nạp artifact khác phiên bản sklearn/NumPy/joblib: refit CSV để tránh pickle không tương thích. |
+| `RF-036` | 434 | Dấu thời gian sửa tệp cho biết có thể dùng bản trong RAM hay phải đọc lại từ đĩa. |
+| `RF-037` | 445 | Đối chiếu mã kiểm tra với báo cáo trước khi mở joblib, rồi xác nhận đúng loại mô hình. |
+| `RF-023` | 458 | API trạng thái đọc kết quả đã có. Chỉ yêu cầu huấn luyện mới khởi động tác vụ và lấy lịch sử nếu cần. |
+| `RF-024` | 479 | Khóa ngăn hai lượt train cùng lúc. Tác vụ chạy nền nên trang và dự báo API vẫn sử dụng được. |
+| `RF-038` | 495 | Chạy huấn luyện nền. Có thể ưu tiên lịch sử cục bộ khi cần bộ kiểm thử cho các mô hình so sánh. |
+| `RF-025` | 509 | Nếu nguồn trực tuyến lỗi, dùng lịch sử thật đã lưu. |
+| `RF-039` | 514 | Tạo mô hình, lưu kết quả và trả trạng thái sẵn sàng. Nhánh xử lý lỗi bên dưới giữ thông báo để người dùng đọc. |
+| `RF-026` | 529 | Chỉ giữ dữ liệu <= as_of trước khi tạo đặc trưng. Thay giá trị tương lai trong request không đổi kết quả RF. |
+| `RF-027` | 553 | Xuất CSV đúng model đang chọn; endpoint không nhận tên đường dẫn từ trình duyệt. |
 
 <a id="tep-train-model-py"></a>
 ### [train_model.py](train_model.py)
@@ -369,10 +374,10 @@ Chạy huấn luyện Random Forest từ terminal, dùng ERA5 trên mạng hoặ
 | `RF-CLI-001` | 11 | Chỉ import ML sau khi đọc tham số, để --help vẫn hoạt động nếu chưa cài thư viện. |
 | `RF-CLI-004` | 13 | Mặc định dùng tọa độ TP.HCM. Người chạy có thể chọn tọa độ khác bằng tham số dòng lệnh. |
 | `RF-CLI-005` | 21 | Lấy đường dẫn lưu dữ liệu và mô hình theo thư mục chứa mã nguồn dù terminal đang mở ở chỗ khác. |
-| `RF-CLI-002` | 24 | Cùng một pipeline như giao diện: tạo đặc trưng, holdout theo thời gian, refit và lưu model. |
-| `RF-CLI-006` | 29 | In các chỉ số, số giờ kiểm thử và vị trí tệp mô hình để dùng trong báo cáo hoặc kiểm tra nhanh. |
-| `RF-CLI-007` | 34 | Trả mã lỗi 1 nếu thiếu thư viện hoặc không huấn luyện được. Mã 0 ở trên báo lệnh hoàn tất. |
-| `RF-CLI-008` | 43 | Chỉ bắt đầu huấn luyện khi chạy file trực tiếp. Import file sẽ không khởi động tác vụ. |
+| `RF-CLI-002` | 24 | Dùng pipeline của giao diện: chọn tham số bằng validation, chấm trên test và lưu mô hình triển khai. |
+| `RF-CLI-006` | 29 | In cấu hình được chọn, số liệu validation/test và vị trí mô hình để kiểm tra nhanh. |
+| `RF-CLI-007` | 35 | Trả mã lỗi 1 nếu thiếu thư viện hoặc không huấn luyện được. Mã 0 ở trên báo lệnh hoàn tất. |
+| `RF-CLI-008` | 44 | Chỉ bắt đầu huấn luyện khi chạy file trực tiếp. Import file sẽ không khởi động tác vụ. |
 
 <a id="tep-weather-series-py"></a>
 ### [weather_series.py](weather_series.py)
@@ -403,23 +408,23 @@ Dự báo nhiệt độ bằng Holt–Winters cộng tính với chu kỳ 24 gi�
 <a id="tep-weather-boosting-py"></a>
 ### [weather_boosting.py](weather_boosting.py)
 
-Huấn luyện và dự báo bằng Histogram Gradient Boosting.
+Chọn số vòng lặp bằng validation, huấn luyện và dự báo bằng Histogram Gradient Boosting.
 
 | Ghi chú | Dòng | Đoạn code làm gì |
 | --- | ---: | --- |
 | `GB-001` | 3 | File này dùng lại dữ liệu của Random Forest để huấn luyện và đánh giá Gradient Boosting, rồi dự báo trên dữ liệu mới. |
 | `GB-002` | 17 | Dùng sai số tuyệt đối để huấn luyện. Ba tham số tiếp theo giới hạn tốc độ học, số vòng lặp và độ lớn của từng cây. |
 | `GB-003` | 23 | Huấn luyện đủ số vòng đã chọn. Kết quả kiểm thử theo thời gian được tính riêng bên dưới. |
-| `GB-004` | 30 | Tạo báo cáo kiểm thử và trả về mô hình đã học để dịch vụ lưu cho lần dự báo sau. |
-| `GB-005` | 34 | Tái sử dụng cùng 25 đặc trưng. Nhãn học là mức chênh nhiệt độ, còn nhiệt độ gốc dùng để đổi kết quả về °C. |
-| `GB-006` | 42 | Đối chiếu cả giờ, nhiệt độ thực và mốc đối chứng để chắc rằng hai mô hình được chấm trên đúng cùng dữ liệu. |
-| `GB-007` | 53 | Tách mô hình chấm điểm khỏi mô hình triển khai để dữ liệu kiểm thử không ảnh hưởng điểm đánh giá. |
-| `GB-008` | 57 | Giới hạn số luồng OpenMP. Cộng dự báo mức chênh vào nhiệt độ gốc trước khi tính sai số. |
-| `GB-009` | 67 | Ghép từng dự báo với nhiệt độ thực, Random Forest và cách lấy nhiệt độ hiện tại cho giờ sau. |
-| `GB-010` | 73 | Báo cáo lưu điểm trên toàn bộ tập kiểm thử cùng tối đa 72 mốc cuối cho biểu đồ. |
-| `GB-011` | 94 | Nhận dữ liệu Open-Meteo theo giờ và dùng mô hình đã lưu để dự báo giờ kế tiếp. |
-| `GB-012` | 103 | Xác thực các mảng theo giờ rồi lấy 25 giờ liên tiếp kết thúc tại mốc đầu vào. |
-| `GB-013` | 110 | Chuyển dự báo chênh lệch về nhiệt độ tuyệt đối và đánh dấu dữ liệu đầu vào quá hai giờ. |
+| `GB-004` | 31 | Tạo báo cáo kiểm thử và trả về mô hình đã học để dịch vụ lưu cho lần dự báo sau. |
+| `GB-005` | 35 | Tái sử dụng cùng 25 đặc trưng. Nhãn học là mức chênh nhiệt độ, còn nhiệt độ gốc dùng để đổi kết quả về °C. |
+| `GB-006` | 43 | Đối chiếu cả giờ, nhiệt độ thực và mốc đối chứng để chắc rằng hai mô hình được chấm trên đúng cùng dữ liệu. |
+| `GB-007` | 56 | Chọn số vòng bằng validation, rồi fit lại trên toàn bộ dữ liệu trước test trừ mẫu ở biên. |
+| `GB-008` | 67 | Cộng dự báo mức chênh vào nhiệt độ gốc trước khi tính sai số. |
+| `GB-009` | 74 | Ghép từng dự báo với nhiệt độ thực, Random Forest và cách lấy nhiệt độ hiện tại cho giờ sau. |
+| `GB-010` | 80 | Báo cáo lưu điểm trên toàn bộ tập kiểm thử cùng tối đa 72 mốc cuối cho biểu đồ. |
+| `GB-011` | 102 | Nhận dữ liệu Open-Meteo theo giờ và dùng mô hình đã lưu để dự báo giờ kế tiếp. |
+| `GB-012` | 111 | Xác thực các mảng theo giờ rồi lấy 25 giờ liên tiếp kết thúc tại mốc đầu vào. |
+| `GB-013` | 118 | Chuyển dự báo chênh lệch về nhiệt độ tuyệt đối và đánh dấu dữ liệu đầu vào quá hai giờ. |
 
 <a id="tep-weather-chronos-py"></a>
 ### [weather_chronos.py](weather_chronos.py)
@@ -553,11 +558,12 @@ Thông tin huấn luyện và điểm kiểm thử Random Forest.
 | 3, 4, 5, 6, 7 | `method`, `target`, `trained_at`, `latitude`, `longitude` — Tên phương pháp, biến cần dự báo, thời điểm huấn luyện và tọa độ nếu có. |
 | 8, 9, 10, 11, 12 | `history_start`, `history_end`, `raw_rows`, `supervised_samples`, `features` — Phạm vi lịch sử và số dòng, số mẫu hoặc số đặc trưng sau khi chuẩn bị. |
 | 13, 16, 17, 15 | `train_samples`, `train_start`, `train_end_target`, `gap_samples` — Phạm vi huấn luyện và khoảng đệm ở ranh giới chia tập. |
+| 167 | `validation` — Mốc và số mẫu chọn tham số, MAE mỗi cấu hình trên validation và cấu hình được chọn. |
 | 18, 19, 20, 14 | `test_start_anchor`, `test_start_target`, `test_end_target`, `test_samples` — Các mốc và số mẫu dùng để so sánh trên tập kiểm thử. |
 | 21, 26 | `metrics`, `baseline` — MAE, RMSE và R² của mô hình, Random Forest đối chiếu hoặc Persistence. |
 | 31, 32, 33 | `mae_improvement_percent`, `absolute_error_p90`, `feature_importance` — Mức cải thiện MAE so với đối chứng, phân vị 90 của sai số tuyệt đối và mức quan trọng của đặc trưng. |
-| 160, 167 | `parameters`, `training_seconds` — Tham số mô hình và thời gian đo các bước nếu có. |
-| 135, 168, 169, 170, 172, 171 | `source`, `sklearn_version`, `numpy_version`, `joblib_version`, `artifact_sha256`, `note` — Nguồn dữ liệu, phiên bản thư viện và dấu kiểm dùng khi nạp lại mô hình Random Forest. |
+| 160, 217 | `parameters`, `training_seconds` — Tham số mô hình và thời gian đo các bước nếu có. |
+| 135, 218, 219, 220, 222, 221 | `source`, `sklearn_version`, `numpy_version`, `joblib_version`, `artifact_sha256`, `note` — Nguồn dữ liệu, phiên bản thư viện và dấu kiểm dùng khi nạp lại mô hình Random Forest. |
 
 <a id="tep-models-vn-10p78-106p70-time-series-json"></a>
 ### [models/vn_10p78_106p70.time-series.json](models/vn_10p78_106p70.time-series.json)
@@ -587,11 +593,12 @@ Tham số san bằng và kết quả kiểm thử Holt–Winters.
 | 5 | `method` — Tên phương pháp, biến cần dự báo, thời điểm huấn luyện và tọa độ nếu có. |
 | 6, 7 | `history_start`, `history_end` — Phạm vi lịch sử và số dòng, số mẫu hoặc số đặc trưng sau khi chuẩn bị. |
 | 8 | `train_end_target` — Phạm vi huấn luyện và khoảng đệm ở ranh giới chia tập. |
+| 36 | `validation` — Mốc và số mẫu chọn tham số, MAE mỗi cấu hình trên validation và cấu hình được chọn. |
 | 9, 10, 11, 12 | `test_start_anchor`, `test_start_target`, `test_end_target`, `test_samples` — Các mốc và số mẫu dùng để so sánh trên tập kiểm thử. |
 | 13, 18, 23 | `metrics`, `random_forest`, `baseline` — MAE, RMSE và R² của mô hình, Random Forest đối chiếu hoặc Persistence. |
-| 28, 36, 37 | `parameters`, `training_seconds`, `evaluation_seconds` — Tham số mô hình và thời gian đo các bước nếu có. |
-| 38 | `backtest` — Các mốc cuối để vẽ biểu đồ. Mỗi mốc chứa thời gian, nhiệt độ ERA5, dự báo và đối chứng. |
-| 545, 546 | `estimator_sha256`, `sklearn_version` — Dấu kiểm của mô hình Gradient Boosting và phiên bản scikit-learn đã dùng. |
+| 28, 90, 91 | `parameters`, `training_seconds`, `evaluation_seconds` — Tham số mô hình và thời gian đo các bước nếu có. |
+| 92 | `backtest` — Các mốc cuối để vẽ biểu đồ. Mỗi mốc chứa thời gian, nhiệt độ ERA5, dự báo và đối chứng. |
+| 599, 600 | `estimator_sha256`, `sklearn_version` — Dấu kiểm của mô hình Gradient Boosting và phiên bản scikit-learn đã dùng. |
 
 <a id="tep-models-vn-10p78-106p70-chronos-json"></a>
 ### [models/vn_10p78_106p70.chronos.json](models/vn_10p78_106p70.chronos.json)
@@ -620,6 +627,28 @@ Kết quả từng giờ của Random Forest trên tập kiểm thử.
 | Dòng | Nội dung |
 | ---: | --- |
 | 1 | Tiêu đề cột gồm `time`, `actual`, `predicted`, `baseline`, `absolute_error`. |
+| 2–1748 | Mỗi dòng tương ứng một giờ theo cấu trúc của tiêu đề. |
+
+<a id="tep-reports-validation-analysis-analysis-json"></a>
+### [reports/validation_analysis/analysis.json](reports/validation_analysis/analysis.json)
+
+Số liệu chính xác dùng để trình bày các bảng và hình trong báo cáo.
+
+| Dòng | Nội dung |
+| ---: | --- |
+| 2, 15, 121 | `split`, `validation`, `parameters` — Các mốc chia tập, điểm validation và tham số được chọn. |
+| 148, 180, 210, 244 | `benchmark`, `distributions`, `monthly`, `hourly` — Sai số tổng hợp, phân bố sai số, và sai số theo tháng hoặc giờ. |
+| 350, 387, 431 | `dm`, `ablations`, `importance` — Kiểm định Diebold–Mariano, thí nghiệm thay đổi cấu hình và độ quan trọng đặc trưng. |
+| 533, 551, 573, 579 | `examples`, `largest_recent`, `chronos`, `timings` — Mốc minh họa, sai số lớn nhất trong 72 giờ cuối, kết quả Chronos và thời gian đo. |
+
+<a id="tep-reports-validation-analysis-holdout-predictions-csv"></a>
+### [reports/validation_analysis/holdout_predictions.csv](reports/validation_analysis/holdout_predictions.csv)
+
+Dự báo đối chiếu trên 1.747 mốc test, với 72 mốc cuối của Chronos.
+
+| Dòng | Nội dung |
+| ---: | --- |
+| 1 | Tiêu đề cột gồm `time`, `era5`, `rf`, `gb`, `hw`, `persistence`, `chronos`, `chronos_lower`, `chronos_upper`. |
 | 2–1748 | Mỗi dòng tương ứng một giờ theo cấu trúc của tiêu đề. |
 
 <a id="tep-src-main-tsx"></a>
@@ -1322,25 +1351,25 @@ Kiểm tra dữ liệu, mô hình Random Forest và các API dự báo cục b�
 | `RF-TEST-003` | 64 | Thay nhiệt độ tương lai không đổi vector đặc trưng tại t; nhãn y phải thay đổi đúng. |
 | `RF-TEST-004` | 77 | Khoảng thiếu giờ không được biến thành lag 1h nhờ việc đánh lại chỉ số. |
 | `RF-TEST-005` | 87 | Train kết thúc trước anchor của test; số dòng báo cáo cộng với gap phải khớp số mẫu thực. |
-| `RF-TEST-006` | 93 | Tự tính lại MAE/RMSE từ holdout xuất CSV; baseline đúng là nhiệt độ giờ trước. |
-| `RF-TEST-007` | 105 | Predict cũng loại dữ liệu tương lai, không chỉ pipeline train. |
-| `RF-TEST-015` | 116 | Thiếu cửa sổ 25 giờ thì yêu cầu bị từ chối. |
-| `RF-TEST-008` | 122 | Chọn địa điểm khác không được nhận model/metrics của TP.HCM. |
-| `RF-TEST-016` | 128 | Từ chối tọa độ không hữu hạn, sai kiểu hoặc nằm ngoài khoảng cho phép. |
-| `RF-TEST-017` | 134 | Bộ dữ liệu quá ít phải báo lỗi trước khi huấn luyện. |
-| `RF-TEST-009` | 139 | Metadata khác phiên bản sklearn không được nạp; CSV lịch sử vẫn có thể dùng để refit. |
-| `RF-TEST-018` | 149 | Sửa CSV đã lưu và kiểm tra mã băm phát hiện nội dung thay đổi. |
-| `RF-TEST-010` | 157 | Tải lại artifact giữ nguyên dự đoán; CSV holdout đủ dòng và có BOM cho Excel. |
-| `RF-TEST-011` | 167 | HTTP 429 giữ cooldown dùng chung cho địa điểm khác; không gọi URL nguồn lần thứ hai. |
-| `RF-TEST-012` | 177 | Hai lần bấm train cùng lúc không tạo hai tác vụ; status trả ngay và chuyển ready sau khi lưu. |
-| `RF-HTTP-TEST-004` | 198 | Chạy máy chủ trên một cổng tạm với dữ liệu riêng của bài kiểm tra. |
-| `RF-HTTP-TEST-005` | 224 | Gửi yêu cầu HTTP thật, lấy mã trạng thái, tiêu đề và nội dung phản hồi. |
-| `RF-HTTP-TEST-001` | 235 | Kiểm tra HTTP thật nối vào model thật đã fit trong fixture, không mock kết quả predict. |
-| `RF-HTTP-TEST-006` | 246 | Huấn luyện Holt–Winters qua API, chờ sẵn sàng rồi kiểm tra dự báo sau khi nạp lại. |
-| `RF-HTTP-TEST-007` | 281 | Kiểm tra mã lỗi khi tham số sai, phương thức sai hoặc đường dẫn không tồn tại. |
-| `RF-HTTP-TEST-002` | 288 | Trang ngoài localhost không kích hoạt train được và body không phải JSON bị từ chối. |
-| `RF-HTTP-TEST-008` | 295 | CSV xuất cho đúng tọa độ và có dấu UTF-8 BOM để mở bằng Excel. |
-| `RF-HTTP-TEST-003` | 303 | Thiếu thư viện ML chỉ trả 503 có hướng dẫn; server HTML vẫn hoạt động. |
+| `RF-TEST-006` | 106 | Tự tính lại MAE/RMSE từ holdout xuất CSV; baseline đúng là nhiệt độ giờ trước. |
+| `RF-TEST-007` | 118 | Predict cũng loại dữ liệu tương lai, không chỉ pipeline train. |
+| `RF-TEST-015` | 129 | Thiếu cửa sổ 25 giờ thì yêu cầu bị từ chối. |
+| `RF-TEST-008` | 135 | Chọn địa điểm khác không được nhận model/metrics của TP.HCM. |
+| `RF-TEST-016` | 141 | Từ chối tọa độ không hữu hạn, sai kiểu hoặc nằm ngoài khoảng cho phép. |
+| `RF-TEST-017` | 147 | Bộ dữ liệu quá ít phải báo lỗi trước khi huấn luyện. |
+| `RF-TEST-009` | 152 | Metadata khác phiên bản sklearn không được nạp; CSV lịch sử vẫn có thể dùng để refit. |
+| `RF-TEST-018` | 162 | Sửa CSV đã lưu và kiểm tra mã băm phát hiện nội dung thay đổi. |
+| `RF-TEST-010` | 170 | Tải lại artifact giữ nguyên dự đoán; CSV holdout đủ dòng và có BOM cho Excel. |
+| `RF-TEST-011` | 180 | HTTP 429 giữ cooldown dùng chung cho địa điểm khác; không gọi URL nguồn lần thứ hai. |
+| `RF-TEST-012` | 190 | Hai lần bấm train cùng lúc không tạo hai tác vụ; status trả ngay và chuyển ready sau khi lưu. |
+| `RF-HTTP-TEST-004` | 211 | Chạy máy chủ trên một cổng tạm với dữ liệu riêng của bài kiểm tra. |
+| `RF-HTTP-TEST-005` | 237 | Gửi yêu cầu HTTP thật, lấy mã trạng thái, tiêu đề và nội dung phản hồi. |
+| `RF-HTTP-TEST-001` | 248 | Kiểm tra HTTP thật nối vào model thật đã fit trong fixture, không mock kết quả predict. |
+| `RF-HTTP-TEST-006` | 259 | Huấn luyện Holt–Winters qua API, chờ sẵn sàng rồi kiểm tra dự báo sau khi nạp lại. |
+| `RF-HTTP-TEST-007` | 294 | Kiểm tra mã lỗi khi tham số sai, phương thức sai hoặc đường dẫn không tồn tại. |
+| `RF-HTTP-TEST-002` | 301 | Trang ngoài localhost không kích hoạt train được và body không phải JSON bị từ chối. |
+| `RF-HTTP-TEST-008` | 308 | CSV xuất cho đúng tọa độ và có dấu UTF-8 BOM để mở bằng Excel. |
+| `RF-HTTP-TEST-003` | 316 | Thiếu thư viện ML chỉ trả 503 có hướng dẫn; server HTML vẫn hoạt động. |
 
 <a id="tep-tests-test-weather-series-py"></a>
 ### [tests/test_weather_series.py](tests/test_weather_series.py)
@@ -1371,8 +1400,8 @@ Kiểm tra Gradient Boosting trên cùng mốc đánh giá với Random Forest.
 | `GB-TEST-000` | 3 | Huấn luyện thử trên dữ liệu giả lập để kiểm tra tập đánh giá và đầu vào dự báo. |
 | `GB-TEST-001` | 15 | Hai mô hình dùng chung dữ liệu và được huấn luyện một lần cho cả nhóm bài kiểm tra. |
 | `GB-TEST-002` | 23 | So sánh cùng số đặc trưng, cùng mốc kiểm thử và cùng số liệu đối chứng. |
-| `GB-TEST-003` | 36 | Đổi nhiệt độ và độ ẩm ở các giờ sau mốc dự báo để chắc chúng không ảnh hưởng kết quả. |
-| `GB-TEST-004` | 46 | Nếu giá trị thực ở tập đối chiếu lệch với lịch sử đang dùng, dừng lập báo cáo. |
+| `GB-TEST-003` | 42 | Đổi nhiệt độ và độ ẩm ở các giờ sau mốc dự báo để chắc chúng không ảnh hưởng kết quả. |
+| `GB-TEST-004` | 52 | Nếu giá trị thực ở tập đối chiếu lệch với lịch sử đang dùng, dừng lập báo cáo. |
 
 <a id="tep-tests-test-weather-chronos-py"></a>
 ### [tests/test_weather_chronos.py](tests/test_weather_chronos.py)

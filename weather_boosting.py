@@ -10,20 +10,21 @@ import numpy as np
 from sklearn.ensemble import HistGradientBoostingRegressor
 from threadpoolctl import threadpool_limits
 
-from weather_ml import VN, _features_at, hour, iso, rows_from_hourly, scores, supervised
+from weather_ml import VN, _features_at, hour, iso, rows_from_hourly, scores, select_validation_parameters, supervised
 
 
 METHOD = "HistGradientBoostingRegressor"
 # [GB-002] Dùng sai số tuyệt đối để huấn luyện. Ba tham số tiếp theo giới hạn tốc độ học, số vòng lặp và độ lớn của từng cây.
 PARAMETERS = {
     "loss": "absolute_error",  # Huấn luyện theo độ lớn sai số, tính bằng °C.
-    "max_iter": 300,  # Số vòng xây cây để sửa sai số còn lại.
+    "max_iter": 300,  # Số vòng của ứng viên mặc định.
     "learning_rate": 0.05,  # Mỗi cây mới chỉ góp một phần nhỏ vào kết quả.
     "max_leaf_nodes": 31,  # Giới hạn số lá của mỗi cây.
     # [GB-003] Huấn luyện đủ số vòng đã chọn. Kết quả kiểm thử theo thời gian được tính riêng bên dưới.
     "early_stopping": False,
     "random_state": 42,  # Cố định hạt giống để dễ chạy lại thí nghiệm.
 }
+GB_VALIDATION_ITERATIONS = (300, 150, 450)
 ONE_HOUR = timedelta(hours=1)
 
 
@@ -50,14 +51,20 @@ def build_report(rows: list[dict], rf_artifact: dict) -> tuple[dict, HistGradien
             or not np.allclose(bases[test_start:], [row["baseline"] for row in reference], rtol=0, atol=1e-8)):
         raise ValueError(disagreement)
 
-    # [GB-007] Tách mô hình chấm điểm khỏi mô hình triển khai để dữ liệu kiểm thử không ảnh hưởng điểm đánh giá.
-    evaluation_model = HistGradientBoostingRegressor(**PARAMETERS)
-    fitted_model = HistGradientBoostingRegressor(**PARAMETERS)
     started = perf_counter()
-    # [GB-008] Giới hạn số luồng OpenMP. Cộng dự báo mức chênh vào nhiệt độ gốc trước khi tính sai số.
+    candidates = [{**PARAMETERS, "max_iter": iterations} for iterations in GB_VALIDATION_ITERATIONS]
+    # [GB-007] Chọn số vòng bằng validation, rồi fit lại trên toàn bộ dữ liệu trước test trừ mẫu ở biên.
     with threadpool_limits(limits=4, user_api="openmp"):
+        validation = select_validation_parameters(
+            lambda parameters: HistGradientBoostingRegressor(**parameters),
+            candidates, features, deltas, bases, anchors, train_stop,
+        )
+        parameters = validation["selected"]
+        evaluation_model = HistGradientBoostingRegressor(**parameters)
+        fitted_model = HistGradientBoostingRegressor(**parameters)
         evaluation_model.fit(features[:train_stop], deltas[:train_stop])
         evaluation_started = perf_counter()
+        # [GB-008] Cộng dự báo mức chênh vào nhiệt độ gốc trước khi tính sai số.
         predictions = bases[test_start:] + evaluation_model.predict(features[test_start:])
         evaluation_seconds = perf_counter() - evaluation_started
         # Mô hình dùng trực tiếp học thêm từ lịch sử đã có sau khi chốt điểm kiểm thử.
@@ -83,7 +90,8 @@ def build_report(rows: list[dict], rf_artifact: dict) -> tuple[dict, HistGradien
         "metrics": scores(actual, predictions),
         "random_forest": scores(actual, np.asarray([row["predicted"] for row in reference])),
         "baseline": scores(actual, bases[test_start:]),
-        "parameters": dict(PARAMETERS),
+        "parameters": parameters,
+        "validation": validation,
         "training_seconds": training_seconds,
         "evaluation_seconds": evaluation_seconds,
         "backtest": backtest[-72:],

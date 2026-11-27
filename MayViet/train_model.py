@@ -21,14 +21,15 @@ def main() -> int:
         # [RF-CLI-005] Lấy đường dẫn lưu dữ liệu và mô hình theo thư mục chứa mã nguồn dù terminal đang mở ở chỗ khác.
         service = MLService(Path(__file__).resolve().parent)
         key, lat, lon = location(args.latitude, args.longitude)
-        # [RF-CLI-002] Cùng một pipeline như giao diện: tạo đặc trưng, holdout theo thời gian, refit và lưu model.
+        # [RF-CLI-002] Dùng pipeline của giao diện: chọn tham số bằng validation, chấm trên test và lưu mô hình triển khai.
         rows, source = service.history(key) if args.offline else service.download_history(lat, lon)
         print(f"Dữ liệu thật: {len(rows)} giờ, từ {rows[0]['time']} đến {rows[-1]['time']}.", flush=True)
         artifact = fit_model(rows, lat, lon, source)
         service.persist(key, artifact)
-        # [RF-CLI-006] In các chỉ số, số giờ kiểm thử và vị trí tệp mô hình để dùng trong báo cáo hoặc kiểm tra nhanh.
+        # [RF-CLI-006] In cấu hình được chọn, số liệu validation/test và vị trí mô hình để kiểm tra nhanh.
         report = artifact["report"]
-        print(json.dumps({"method": report["method"], "metrics": report["metrics"], "baseline": report["baseline"],
+        print(json.dumps({"method": report["method"], "validation": report["validation"],
+                          "metrics": report["metrics"], "baseline": report["baseline"],
                           "test_samples": report["test_samples"], "model": str(service.paths(key)["model"])}, ensure_ascii=False, indent=2))
         return 0
     # [RF-CLI-007] Trả mã lỗi 1 nếu thiếu thư viện hoặc không huấn luyện được. Mã 0 ở trên báo lệnh hoàn tất.

@@ -28,6 +28,12 @@ class GradientBoostingTests(unittest.TestCase):
         for name in ("train_end_target", "test_start_target", "test_end_target", "test_samples", "baseline"):
             self.assertEqual(self.report[name], reference_report[name])
         self.assertEqual(self.report["random_forest"], reference_report["metrics"])
+        validation = self.report["validation"]
+        for name in ("candidate_train_samples", "validation_samples", "validation_start_target", "validation_end_target"):
+            self.assertEqual(validation[name], reference_report["validation"][name])
+        self.assertEqual(validation["mae"], min(candidate["mae"] for candidate in validation["candidates"]))
+        self.assertEqual(validation["selected"], self.report["parameters"])
+        self.assertEqual(self.model.max_iter, validation["selected"]["max_iter"])
         self.assertEqual(
             [row["time"] for row in self.report["backtest"]],
             [row["time"] for row in self.reference["holdout"][-72:]],

@@ -16,6 +16,7 @@ import os
 import threading
 import time
 from collections import OrderedDict
+from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from urllib.error import HTTPError, URLError
@@ -46,6 +47,7 @@ FEATURE_NAMES = (
     "Chu kỳ giờ sin", "Chu kỳ giờ cos", "Chu kỳ năm sin", "Chu kỳ năm cos",
 )
 LIMITS = ((-80, 65), (0, 100), (400, 1150), (0, 400), (0, 100))
+RF_VALIDATION_DEPTHS = (14, 8, 20)
 
 
 # [RF-003] Tọa độ được kiểm tra và làm tròn 2 chữ số (~1 km); mỗi khu vực có mô hình riêng, không dùng model TP.HCM cho Hà Nội.
@@ -163,15 +165,66 @@ def scores(actual: np.ndarray, predicted: np.ndarray) -> dict:
     }
 
 
-# [RF-011] Có random_state cố định, giới hạn độ sâu và min_samples_leaf để giảm quá khớp; tối đa 4 luồng CPU.
-def estimator(trees: int = 160) -> RandomForestRegressor:
+# [RF-011] Giữ seed cố định và tối đa bốn luồng CPU. Tập validation chọn độ sâu của cây.
+def estimator(trees: int = 160, *, max_depth: int = 14) -> RandomForestRegressor:
     return RandomForestRegressor(
-        n_estimators=trees, max_depth=14, min_samples_leaf=3, max_features=0.9,
+        n_estimators=trees, max_depth=max_depth, min_samples_leaf=3, max_features=0.9,
         random_state=42, n_jobs=min(4, os.cpu_count() or 1),
     )
 
 
-# [RF-012] Chia 80/20 theo thời gian, bỏ một mẫu ở biên. Không shuffle, không chọn tham số bằng tập kiểm thử.
+@dataclass(frozen=True)
+class ValidationPartition:
+    candidate_train_stop: int
+    validation_start: int
+
+
+def validation_partition(anchors: list[str], train_stop: int) -> ValidationPartition:
+    """Tách validation gần 10% từ đoạn trước tập kiểm thử cuối."""
+    validation_start = int(len(anchors) * 0.7)
+    candidate_train_stop = validation_start - 1
+    if not 0 < candidate_train_stop < validation_start < train_stop <= len(anchors):
+        raise ValueError("Không đủ mẫu để chia tập train và validation theo thời gian.")
+    # [RF-040] Bỏ một mẫu ở biên để nhãn cuối của train có trước giờ neo đầu của validation.
+    last_training_target = hour(anchors[candidate_train_stop - 1]) + timedelta(hours=1)
+    if last_training_target >= hour(anchors[validation_start]):
+        raise ValueError("Biên thời gian train/validation bị chồng lấn.")
+    return ValidationPartition(candidate_train_stop, validation_start)
+
+
+def select_validation_parameters(make_model, candidates: list[dict], features: np.ndarray,
+                                 deltas: np.ndarray, bases: np.ndarray, anchors: list[str],
+                                 train_stop: int) -> dict:
+    """Chọn cấu hình theo MAE của nhiệt độ dự báo, chỉ đọc dữ liệu trước test."""
+    partition = validation_partition(anchors, train_stop)
+    stop = partition.candidate_train_stop
+    validation = slice(partition.validation_start, train_stop)
+    actual = bases[validation] + deltas[validation]
+    evaluated = []
+    started = time.perf_counter()
+    for parameters in candidates:
+        model = make_model(parameters)
+        model.fit(features[:stop], deltas[:stop])
+        predicted = bases[validation] + model.predict(features[validation])
+        evaluated.append({"parameters": parameters, "mae": float(np.mean(np.abs(actual - predicted)))})
+    # [RF-041] Khi MAE bằng nhau, ưu tiên cấu hình xuất hiện trước trong danh sách.
+    best = min(evaluated, key=lambda candidate: candidate["mae"])
+    return {
+        "candidate_train_samples": stop,
+        "candidate_train_end_target": iso(hour(anchors[stop - 1]) + timedelta(hours=1)),
+        "validation_samples": len(actual),
+        "validation_start_target": iso(hour(anchors[partition.validation_start]) + timedelta(hours=1)),
+        "validation_end_target": iso(hour(anchors[train_stop - 1]) + timedelta(hours=1)),
+        "gap_samples": partition.validation_start - stop,
+        "metric": "mae",
+        "selected": best["parameters"],
+        "mae": best["mae"],
+        "candidates": evaluated,
+        "selection_seconds": round(time.perf_counter() - started, 3),
+    }
+
+
+# [RF-012] Giữ nguyên 20% cuối làm test. Chọn tham số trong 80% đầu, rồi huấn luyện lại trước biên test.
 def fit_model(rows: list[dict], lat: float, lon: float, source: dict, trees: int = 160) -> dict:
     x, delta, base, anchors = supervised(rows)
     if len(x) < 720:
@@ -182,9 +235,16 @@ def fit_model(rows: list[dict], lat: float, lon: float, source: dict, trees: int
     test_start = hour(anchors[split])
     if train_end >= test_start:
         raise ValueError("Biên thời gian train/test bị chồng lấn.")
-    # [RF-013] Model đánh giá chỉ học phần train. Baseline Persistence luôn đoán T(t+1)=T(t).
-    evaluation_model = estimator(trees)
     started = time.perf_counter()
+    base_parameters = {"n_estimators": trees, "min_samples_leaf": 3, "max_features": 0.9, "random_state": 42}
+    candidates = [{**base_parameters, "max_depth": depth} for depth in RF_VALIDATION_DEPTHS]
+    validation = select_validation_parameters(
+        lambda parameters: estimator(trees, max_depth=parameters["max_depth"]),
+        candidates, x, delta, base, anchors, train_stop,
+    )
+    parameters = validation["selected"]
+    # [RF-013] Mô hình đánh giá học lại trên toàn bộ dữ liệu trước test, trừ một mẫu ở biên test.
+    evaluation_model = estimator(trees, max_depth=parameters["max_depth"])
     evaluation_model.fit(x[:train_stop], delta[:train_stop])
     prediction = base[split:] + evaluation_model.predict(x[split:])
     actual = base[split:] + delta[split:]
@@ -196,7 +256,7 @@ def fit_model(rows: list[dict], lat: float, lon: float, source: dict, trees: int
         for j, i in enumerate(range(split, len(x)))
     ]
     # [RF-014] Sau khi chốt kết quả holdout, fit model triển khai trên toàn bộ lịch sử. Không tính lại điểm bằng model đã học holdout.
-    final_model = estimator(trees)
+    final_model = estimator(trees, max_depth=parameters["max_depth"])
     final_model.fit(x, delta)
     importance = sorted(
         ({"name": name, "value": float(weight)} for name, weight in zip(FEATURE_NAMES, final_model.feature_importances_)),
@@ -214,7 +274,7 @@ def fit_model(rows: list[dict], lat: float, lon: float, source: dict, trees: int
         "mae_improvement_percent": (1 - rf_metrics["mae"] / baseline["mae"]) * 100 if baseline["mae"] > 1e-12 else None,
         "absolute_error_p90": float(np.quantile(np.abs(actual - prediction), 0.9)),
         "feature_importance": importance, "source": source,
-        "parameters": {"n_estimators": trees, "max_depth": 14, "min_samples_leaf": 3, "max_features": 0.9, "random_state": 42},
+        "parameters": parameters, "validation": validation,
         "training_seconds": round(time.perf_counter() - started, 3),
         "sklearn_version": sklearn.__version__,
         "numpy_version": np.__version__, "joblib_version": joblib.__version__,
@@ -454,7 +514,7 @@ class MLService:
             # [RF-039] Tạo mô hình, lưu kết quả và trả trạng thái sẵn sàng. Nhánh xử lý lỗi bên dưới giữ thông báo để người dùng đọc.
             rows, source = prepared
             with self.lock:
-                self.jobs[key] = {"state": "training", "message": "Đang fit Random Forest và kiểm thử 20% cuối theo thời gian…"}
+                self.jobs[key] = {"state": "training", "message": "Đang chọn độ sâu Random Forest bằng validation rồi kiểm thử trên 20% cuối…"}
             artifact = fit_model(rows, lat, lon, source)
             self.persist(key, artifact)
             with self.lock:

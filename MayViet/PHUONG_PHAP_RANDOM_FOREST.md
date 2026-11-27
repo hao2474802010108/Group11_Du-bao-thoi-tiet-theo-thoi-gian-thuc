@@ -18,7 +18,7 @@ Việc cộng lại nhiệt độ hiện tại không biến mô hình thành Pe
 ## 2. Dữ liệu thật và nguồn
 
 - Nguồn: Open-Meteo Historical Weather API, tham số models=era5.
-- Lịch sử TP.HCM đi kèm: 8,760 giờ, 2025-11-04T00:00 đến 2026-11-03T23:00 (GMT+7).
+- Lịch sử TP.HCM đi kèm gồm 8.760 giờ, từ 2025-11-05T00:00 đến 2026-11-04T23:00 (GMT+7).
 - Tọa độ tra cứu model: 10.78, 106.70; ô lưới ERA5 trả về: 10.75, 106.75.
 - Các biến: temperature_2m (°C), relative_humidity_2m (%), surface_pressure (hPa), wind_speed_10m (km/h), cloud_cover (%).
 - CSV, URL đầy đủ, ngày tải, checksum và thông tin ô lưới ở data/history.
@@ -53,32 +53,32 @@ Random Forest tạo nhiều cây từ các mẫu bootstrap thuộc **tập train
 | Tham số          | Giá trị              |
 | ---------------- | -------------------- |
 | n_estimators     | 160                  |
-| max_depth        | 14                   |
+| max_depth        | 20                   |
 | min_samples_leaf | 3                    |
 | max_features     | 0.9                  |
 | random_state     | 42                   |
 | n_jobs           | Tối đa 4 CPU threads |
 
-Không chạy GridSearch để chọn model theo chính holdout rồi gọi đó là đánh giá khách quan. Bộ tham số được cố định trong code. Nếu sau này tối ưu tham số, cần chia thêm validation hoặc dùng TimeSeriesSplit bên trong phần train rồi giữ tập test cuối độc lập.
+Với 160 cây, nhóm thử ba độ sâu 14, 8 và 20. MAE trên tập validation lần lượt là 0,3338°C, 0,3346°C và 0,3332°C, nên chọn độ sâu 20. Tập kiểm thử được dùng để chấm điểm sau khi đã chốt cấu hình.
 
 ## 5. Chia tập và chống rò rỉ
 
-1. Tạo mẫu theo thời gian tăng dần, mỗi mẫu chỉ dùng dữ liệu <=t và nhãn ở t+1.
-2. Lấy khoảng 80% mẫu đầu để train, 20% cuối để test; không shuffle.
-3. Bỏ một mẫu tại biên để giờ nhãn cuối train < giờ anchor đầu test.
-4. Fit evaluation_model trên train; đo RF và Persistence trên cùng holdout.
-5. Chốt metrics/CSV holdout. Sau đó fit final_model trên toàn bộ lịch sử cho ứng dụng sử dụng.
+1. Tạo mẫu theo thời gian tăng dần. Mẫu ở mốc t chỉ dùng dữ liệu đến t để dự báo nhiệt độ giờ t+1.
+2. Chia gần đúng theo tỷ lệ 70% huấn luyện thử, 10% validation và 20% kiểm thử.
+3. Bỏ một mẫu ở mỗi biên khi chọn cấu hình. Giờ nhãn cuối ở phần trước phải sớm hơn giờ dự báo đầu của phần sau.
+4. Sau khi chọn độ sâu, huấn luyện lại trên toàn bộ phần trước tập kiểm thử, gồm cả mẫu đệm giữa train và validation.
+5. Chấm Random Forest và Persistence trên cùng 1.747 mốc test. Sau khi lưu điểm và dự báo, huấn luyện mô hình triển khai trên toàn bộ lịch sử.
 
-Bootstrap bên trong Random Forest chỉ dùng phần train, không trộn tập test vào train. Số liệu cụ thể:
+Số mẫu và mốc giờ đích đều dùng múi giờ GMT+7.
 
-| Mục                | Giá trị                             |
-| ------------------ | ----------------------------------- |
-| Train              | 6,987 mẫu                           |
-| Gap                | 1 mẫu                               |
-| Test               | 1,747 mẫu                           |
-| Nhãn cuối train    | 2026-08-23T03:00                    |
-| Anchor đầu test    | 2026-08-23T04:00                    |
-| Nhãn đầu/cuối test | 2026-08-23T05:00 / 2026-11-03T23:00 |
+| Phần | Số mẫu | Khoảng mốc giờ đích |
+| --- | ---: | --- |
+| Huấn luyện thử | 6.113 | 2025-11-06T01:00 đến 2026-07-18T17:00 |
+| Đệm trước validation | 1 | 2026-07-18T18:00 |
+| Validation | 873 | 2026-07-18T19:00 đến 2026-08-24T03:00 |
+| Huấn luyện lại để chấm test | 6.987 | 2025-11-06T01:00 đến 2026-08-24T03:00 |
+| Đệm trước kiểm thử | 1 | 2026-08-24T04:00 |
+| Kiểm thử | 1.747 | 2026-08-24T05:00 đến 2026-11-04T23:00 |
 
 Các đặc trưng lag của test có thể dùng giờ trước đó trong lịch sử test: đây là đánh giá rolling one-step với quá khứ đã có tại t, không phải dự báo cả 72 ngày một lần từ đầu tập test. Không refit model giữa các giờ test trong phép đánh giá này.
 
@@ -86,10 +86,10 @@ Các đặc trưng lag của test có thể dùng giờ trước đó trong lị
 
 | Phương pháp                         | MAE (°C) | RMSE (°C) |       R² |
 | ----------------------------------- | -------: | --------: | -------: |
-| Random Forest                       | 0.348306 |  0.512547 | 0.937965 |
-| Persistence: giờ sau bằng giờ trước | 0.545163 |  0.761765 | 0.862971 |
+| Random Forest                       | 0.346694 |  0.513126 | 0.938382 |
+| Persistence: giờ sau bằng giờ trước | 0.545564 |  0.762212 | 0.864039 |
 
-MAE RF giảm 36.11% so với Persistence trên cùng test. Đây là phần trăm **giảm sai số MAE**, không phải phần trăm accuracy. R² 0.937965 cũng không nên viết thành “chính xác 93.8%”.
+MAE của Random Forest giảm 36,45% so với Persistence trên cùng tập test. R² đo phần biến thiên được giải thích và có giá trị 0,938382 trong lần kiểm thử này.
 
 - MAE và RMSE nhỏ hơn baseline trong lần chạy này, cho thấy mô hình đã học được biến thiên vượt baseline trên chuỗi ERA5 đã chọn.
 - Chuỗi giờ liên tiếp tương quan cao; cần giữ baseline để tránh đánh giá mô hình chỉ bằng R² cao.

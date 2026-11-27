@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "rf_artifact_sha256": "19370813635961edbf614f383b2f06740e48477cd3caaaf10b7067eade3ee8ac",
+  "rf_artifact_sha256": "130c391bca42baa6a0386c3cad14a51d54310144f4ff778329e7e7d1d7cfc834",
   "report": {
     "method": "Holt–Winters",
     "period_hours": 24,
@@ -19,9 +19,9 @@
       "r2": 0.9133047252550458
     },
     "random_forest": {
-      "mae": 0.3467139581582185,
-      "rmse": 0.5117687823579606,
-      "r2": 0.9387072819786567
+      "mae": 0.3466935333977289,
+      "rmse": 0.5131255284666006,
+      "r2": 0.9383818659307955
     },
     "baseline": {
       "mae": 0.5455638236977676,
@@ -38,504 +38,504 @@
         "time": "2026-11-02T00:00",
         "actual": 26.9,
         "predicted": 26.88133403945349,
-        "random_forest": 26.889024702618713,
+        "random_forest": 26.91829557500235,
         "baseline": 27.2
       },
       {
         "time": "2026-11-02T01:00",
         "actual": 26.9,
         "predicted": 26.439306469874364,
-        "random_forest": 26.785746282339556,
+        "random_forest": 26.812226031158165,
         "baseline": 26.9
       },
       {
         "time": "2026-11-02T02:00",
         "actual": 26.5,
         "predicted": 26.621616314033243,
-        "random_forest": 26.734728671103145,
+        "random_forest": 26.725097328465328,
         "baseline": 26.9
       },
       {
         "time": "2026-11-02T03:00",
         "actual": 26.3,
         "predicted": 26.14933307980717,
-        "random_forest": 26.35987615256022,
+        "random_forest": 26.33043572993816,
         "baseline": 26.5
       },
       {
         "time": "2026-11-02T04:00",
         "actual": 26.3,
         "predicted": 26.212592250600565,
-        "random_forest": 26.173220817586838,
+        "random_forest": 26.15867318225188,
         "baseline": 26.3
       },
       {
         "time": "2026-11-02T05:00",
         "actual": 26.2,
         "predicted": 26.398560158180402,
-        "random_forest": 26.2726583471204,
+        "random_forest": 26.198061312614957,
         "baseline": 26.3
       },
       {
         "time": "2026-11-02T06:00",
         "actual": 26.0,
         "predicted": 26.54682866146498,
-        "random_forest": 26.212954273977783,
+        "random_forest": 26.206027296358783,
         "baseline": 26.2
       },
       {
         "time": "2026-11-02T07:00",
         "actual": 28.0,
         "predicted": 26.70994594430198,
-        "random_forest": 26.741322795742303,
+        "random_forest": 26.77538546176046,
         "baseline": 26.0
       },
       {
         "time": "2026-11-02T08:00",
         "actual": 28.8,
         "predicted": 28.79793597251518,
-        "random_forest": 28.783676465415258,
+        "random_forest": 28.717582659647583,
         "baseline": 28.0
       },
       {
         "time": "2026-11-02T09:00",
         "actual": 29.6,
         "predicted": 29.77039305076086,
-        "random_forest": 29.781422455620792,
+        "random_forest": 29.666038622835497,
         "baseline": 28.8
       },
       {
         "time": "2026-11-02T10:00",
         "actual": 30.5,
         "predicted": 31.399928544726187,
-        "random_forest": 30.358062808007826,
+        "random_forest": 30.241735672313798,
         "baseline": 29.6
       },
       {
         "time": "2026-11-02T11:00",
         "actual": 30.9,
         "predicted": 31.102939547870218,
-        "random_forest": 31.090327865877388,
+        "random_forest": 31.03585929001554,
         "baseline": 30.5
       },
       {
         "time": "2026-11-02T12:00",
         "actual": 31.3,
         "predicted": 31.321888437497588,
-        "random_forest": 31.651998804757692,
+        "random_forest": 31.659961821164945,
         "baseline": 30.9
       },
       {
         "time": "2026-11-02T13:00",
         "actual": 30.9,
         "predicted": 31.665320347330084,
-        "random_forest": 31.834962997960112,
+        "random_forest": 31.921576860639362,
         "baseline": 31.3
       },
       {
         "time": "2026-11-02T14:00",
         "actual": 30.6,
         "predicted": 31.334967526599122,
-        "random_forest": 30.494702030928355,
+        "random_forest": 30.45286895055664,
         "baseline": 30.9
       },
       {
         "time": "2026-11-02T15:00",
         "actual": 28.0,
         "predicted": 30.287515004317534,
-        "random_forest": 30.108510833141334,
+        "random_forest": 30.126100935736623,
         "baseline": 30.6
       },
       {
         "time": "2026-11-02T16:00",
         "actual": 28.2,
         "predicted": 27.510588019676064,
-        "random_forest": 27.388121586054133,
+        "random_forest": 27.389028693528694,
         "baseline": 28.0
       },
       {
         "time": "2026-11-02T17:00",
         "actual": 27.6,
         "predicted": 27.563884490951025,
-        "random_forest": 27.658598569553398,
+        "random_forest": 27.582406634164446,
         "baseline": 28.2
       },
       {
         "time": "2026-11-02T18:00",
         "actual": 27.5,
         "predicted": 26.87757157429792,
-        "random_forest": 27.361254851676048,
+        "random_forest": 27.320895450036076,
         "baseline": 27.6
       },
       {
         "time": "2026-11-02T19:00",
         "actual": 27.0,
         "predicted": 26.802457803984325,
-        "random_forest": 27.15988755376777,
+        "random_forest": 27.15059406912532,
         "baseline": 27.5
       },
       {
         "time": "2026-11-02T20:00",
         "actual": 26.4,
         "predicted": 26.53185834243339,
-        "random_forest": 26.856030000410534,
+        "random_forest": 26.84519266910073,
         "baseline": 27.0
       },
       {
         "time": "2026-11-02T21:00",
         "actual": 26.6,
         "predicted": 26.086411227069146,
-        "random_forest": 26.26305919111887,
+        "random_forest": 26.233031290066446,
         "baseline": 26.4
       },
       {
         "time": "2026-11-02T22:00",
         "actual": 26.9,
         "predicted": 25.848943779001438,
-        "random_forest": 26.464564119265486,
+        "random_forest": 26.431629533454792,
         "baseline": 26.6
       },
       {
         "time": "2026-11-02T23:00",
         "actual": 27.1,
         "predicted": 26.394893041207627,
-        "random_forest": 26.748855576040786,
+        "random_forest": 26.706205593129432,
         "baseline": 26.9
       },
       {
         "time": "2026-11-03T00:00",
         "actual": 26.3,
         "predicted": 26.660418386881123,
-        "random_forest": 26.963136522068424,
+        "random_forest": 26.933576743497095,
         "baseline": 27.1
       },
       {
         "time": "2026-11-03T01:00",
         "actual": 26.5,
         "predicted": 26.0478210109177,
-        "random_forest": 26.128821771575698,
+        "random_forest": 26.146632473148838,
         "baseline": 26.3
       },
       {
         "time": "2026-11-03T02:00",
         "actual": 26.4,
         "predicted": 26.096632299074578,
-        "random_forest": 26.306295747433683,
+        "random_forest": 26.264564864956796,
         "baseline": 26.5
       },
       {
         "time": "2026-11-03T03:00",
         "actual": 26.3,
         "predicted": 26.067627170468274,
-        "random_forest": 26.164831092850594,
+        "random_forest": 26.17230467670415,
         "baseline": 26.4
       },
       {
         "time": "2026-11-03T04:00",
         "actual": 26.0,
         "predicted": 26.1978158215867,
-        "random_forest": 26.074290164474995,
+        "random_forest": 26.11295187821145,
         "baseline": 26.3
       },
       {
         "time": "2026-11-03T05:00",
         "actual": 26.5,
         "predicted": 26.107900908250574,
-        "random_forest": 26.040316124313556,
+        "random_forest": 26.026472892448652,
         "baseline": 26.0
       },
       {
         "time": "2026-11-03T06:00",
         "actual": 26.4,
         "predicted": 26.545980310054205,
-        "random_forest": 26.48462867426427,
+        "random_forest": 26.488945566586192,
         "baseline": 26.5
       },
       {
         "time": "2026-11-03T07:00",
         "actual": 27.1,
         "predicted": 27.522817614823303,
-        "random_forest": 26.823588414327524,
+        "random_forest": 26.787984623015873,
         "baseline": 26.4
       },
       {
         "time": "2026-11-03T08:00",
         "actual": 27.5,
         "predicted": 28.13031665801667,
-        "random_forest": 27.877777573168032,
+        "random_forest": 27.87066011951411,
         "baseline": 27.1
       },
       {
         "time": "2026-11-03T09:00",
         "actual": 29.6,
         "predicted": 28.84708330284786,
-        "random_forest": 28.948886689676566,
+        "random_forest": 28.788672751388106,
         "baseline": 27.5
       },
       {
         "time": "2026-11-03T10:00",
         "actual": 30.8,
         "predicted": 31.08245175202967,
-        "random_forest": 30.344010474315937,
+        "random_forest": 30.380631854256855,
         "baseline": 29.6
       },
       {
         "time": "2026-11-03T11:00",
         "actual": 31.1,
         "predicted": 31.44002055018956,
-        "random_forest": 31.418140638484005,
+        "random_forest": 31.422573261416005,
         "baseline": 30.8
       },
       {
         "time": "2026-11-03T12:00",
         "actual": 31.6,
         "predicted": 31.573031288838642,
-        "random_forest": 31.671986214701604,
+        "random_forest": 31.633352988346196,
         "baseline": 31.1
       },
       {
         "time": "2026-11-03T13:00",
         "actual": 32.4,
         "predicted": 31.759042132165206,
-        "random_forest": 31.924441170958758,
+        "random_forest": 31.877617399961153,
         "baseline": 31.6
       },
       {
         "time": "2026-11-03T14:00",
         "actual": 30.2,
         "predicted": 32.412634160581575,
-        "random_forest": 32.53938239732266,
+        "random_forest": 32.498343359679936,
         "baseline": 32.4
       },
       {
         "time": "2026-11-03T15:00",
         "actual": 30.9,
         "predicted": 29.745687968279082,
-        "random_forest": 29.309416920119975,
+        "random_forest": 29.397537943587146,
         "baseline": 30.2
       },
       {
         "time": "2026-11-03T16:00",
         "actual": 31.0,
         "predicted": 30.309052700564244,
-        "random_forest": 30.28891315026648,
+        "random_forest": 30.34246109099234,
         "baseline": 30.9
       },
       {
         "time": "2026-11-03T17:00",
         "actual": 29.4,
         "predicted": 30.154622859483617,
-        "random_forest": 29.645337670291873,
+        "random_forest": 29.614819083694083,
         "baseline": 31.0
       },
       {
         "time": "2026-11-03T18:00",
         "actual": 28.8,
         "predicted": 28.987110511005127,
-        "random_forest": 28.74768079270964,
+        "random_forest": 28.73884399801587,
         "baseline": 29.4
       },
       {
         "time": "2026-11-03T19:00",
         "actual": 28.3,
         "predicted": 28.18057582979852,
-        "random_forest": 28.207424215353537,
+        "random_forest": 28.23457501275066,
         "baseline": 28.8
       },
       {
         "time": "2026-11-03T20:00",
         "actual": 27.8,
         "predicted": 27.81647550087622,
-        "random_forest": 28.00157920646332,
+        "random_forest": 28.027479822046292,
         "baseline": 28.3
       },
       {
         "time": "2026-11-03T21:00",
         "actual": 27.5,
         "predicted": 27.65844489068336,
-        "random_forest": 27.46664274026712,
+        "random_forest": 27.430761242554304,
         "baseline": 27.8
       },
       {
         "time": "2026-11-03T22:00",
         "actual": 26.8,
         "predicted": 27.08913082976089,
-        "random_forest": 27.28894883766587,
+        "random_forest": 27.26687998889207,
         "baseline": 27.5
       },
       {
         "time": "2026-11-03T23:00",
         "actual": 26.4,
         "predicted": 26.599864917348363,
-        "random_forest": 26.68834172887496,
+        "random_forest": 26.69552558990219,
         "baseline": 26.8
       },
       {
         "time": "2026-11-04T00:00",
         "actual": 26.4,
         "predicted": 25.947176986863123,
-        "random_forest": 26.238169783507207,
+        "random_forest": 26.217685029010223,
         "baseline": 26.4
       },
       {
         "time": "2026-11-04T01:00",
         "actual": 26.7,
         "predicted": 26.188420174441127,
-        "random_forest": 26.277849985118213,
+        "random_forest": 26.29764508777402,
         "baseline": 26.4
       },
       {
         "time": "2026-11-04T02:00",
         "actual": 26.5,
         "predicted": 26.297479708404627,
-        "random_forest": 26.49551802171549,
+        "random_forest": 26.4669696363672,
         "baseline": 26.7
       },
       {
         "time": "2026-11-04T03:00",
         "actual": 26.3,
         "predicted": 26.161980152349564,
-        "random_forest": 26.311717200747267,
+        "random_forest": 26.334917855238906,
         "baseline": 26.5
       },
       {
         "time": "2026-11-04T04:00",
         "actual": 26.0,
         "predicted": 26.109771086349806,
-        "random_forest": 26.111429578368377,
+        "random_forest": 26.122167530553124,
         "baseline": 26.3
       },
       {
         "time": "2026-11-04T05:00",
         "actual": 27.1,
         "predicted": 26.117816250787314,
-        "random_forest": 26.00448422778225,
+        "random_forest": 25.97839785276033,
         "baseline": 26.0
       },
       {
         "time": "2026-11-04T06:00",
         "actual": 26.8,
         "predicted": 26.786892164790462,
-        "random_forest": 27.099485702449222,
+        "random_forest": 27.131065386002888,
         "baseline": 27.1
       },
       {
         "time": "2026-11-04T07:00",
         "actual": 27.6,
         "predicted": 27.749345047451122,
-        "random_forest": 27.262067571361968,
+        "random_forest": 27.182166297364034,
         "baseline": 26.8
       },
       {
         "time": "2026-11-04T08:00",
         "actual": 28.5,
         "predicted": 28.530418578018207,
-        "random_forest": 28.437546989530105,
+        "random_forest": 28.388910584207462,
         "baseline": 27.6
       },
       {
         "time": "2026-11-04T09:00",
         "actual": 30.6,
         "predicted": 29.91681138861293,
-        "random_forest": 30.123368245284354,
+        "random_forest": 30.08887344426407,
         "baseline": 28.5
       },
       {
         "time": "2026-11-04T10:00",
         "actual": 31.3,
         "predicted": 31.856967608953987,
-        "random_forest": 31.311443263582742,
+        "random_forest": 31.347815115440117,
         "baseline": 30.6
       },
       {
         "time": "2026-11-04T11:00",
         "actual": 31.9,
         "predicted": 31.91477065612645,
-        "random_forest": 31.902272466857866,
+        "random_forest": 31.903567142742688,
         "baseline": 31.3
       },
       {
         "time": "2026-11-04T12:00",
         "actual": 32.5,
         "predicted": 32.3554631917913,
-        "random_forest": 32.579332602179186,
+        "random_forest": 32.63480047954849,
         "baseline": 31.9
       },
       {
         "time": "2026-11-04T13:00",
         "actual": 32.5,
         "predicted": 32.6567605849699,
-        "random_forest": 32.896017210426514,
+        "random_forest": 32.9528935994561,
         "baseline": 32.5
       },
       {
         "time": "2026-11-04T14:00",
         "actual": 32.8,
         "predicted": 31.85773370826523,
-        "random_forest": 32.30648969567571,
+        "random_forest": 32.306620454839546,
         "baseline": 32.5
       },
       {
         "time": "2026-11-04T15:00",
         "actual": 31.6,
         "predicted": 32.369728297777556,
-        "random_forest": 32.286554469899485,
+        "random_forest": 32.250543794381784,
         "baseline": 32.8
       },
       {
         "time": "2026-11-04T16:00",
         "actual": 31.4,
         "predicted": 31.309994976460153,
-        "random_forest": 30.79601894184748,
+        "random_forest": 30.829168760843217,
         "baseline": 31.6
       },
       {
         "time": "2026-11-04T17:00",
         "actual": 31.0,
         "predicted": 30.223165322021206,
-        "random_forest": 29.913637897845618,
+        "random_forest": 29.84875099206349,
         "baseline": 31.4
       },
       {
         "time": "2026-11-04T18:00",
         "actual": 30.5,
         "predicted": 30.335271881451757,
-        "random_forest": 29.966432894503047,
+        "random_forest": 29.9742380501443,
         "baseline": 31.0
       },
       {
         "time": "2026-11-04T19:00",
         "actual": 28.7,
         "predicted": 29.816594094841026,
-        "random_forest": 29.321011085442002,
+        "random_forest": 29.367978015040514,
         "baseline": 30.5
       },
       {
         "time": "2026-11-04T20:00",
         "actual": 28.0,
         "predicted": 28.41745222626217,
-        "random_forest": 28.117424851941998,
+        "random_forest": 28.06869825606614,
         "baseline": 28.7
       },
       {
         "time": "2026-11-04T21:00",
         "actual": 27.5,
         "predicted": 27.74804847828433,
-        "random_forest": 27.633309500669636,
+        "random_forest": 27.609532712835932,
         "baseline": 28.0
       },
       {
         "time": "2026-11-04T22:00",
         "actual": 27.5,
         "predicted": 26.90158845571154,
-        "random_forest": 27.25035017780925,
+        "random_forest": 27.28858375064616,
         "baseline": 27.5
       },
       {
         "time": "2026-11-04T23:00",
         "actual": 27.6,
         "predicted": 26.93805166961528,
-        "random_forest": 27.33137312159129,
+        "random_forest": 27.319993440587194,
         "baseline": 27.5
       }
     ]

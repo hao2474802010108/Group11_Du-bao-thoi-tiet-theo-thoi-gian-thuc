@@ -2,7 +2,7 @@
   "schema": 1,
   "method": "RandomForestRegressor",
   "target": "temperature_2m_next_hour",
-  "trained_at": "2026-11-11T18:52:10.423277+07:00",
+  "trained_at": "2026-11-27T15:08:29.912334+07:00",
   "latitude": 10.78,
   "longitude": 106.7,
   "history_start": "2025-11-05T00:00",
@@ -19,117 +19,117 @@
   "test_start_target": "2026-08-24T05:00",
   "test_end_target": "2026-11-04T23:00",
   "metrics": {
-    "mae": 0.3467139581582185,
-    "rmse": 0.5117687823579606,
-    "r2": 0.9387072819786567
+    "mae": 0.34669353339772896,
+    "rmse": 0.5131255284666006,
+    "r2": 0.9383818659307955
   },
   "baseline": {
     "mae": 0.5455638236977676,
     "rmse": 0.7622121572362969,
     "r2": 0.864039409466072
   },
-  "mae_improvement_percent": 36.448506462867726,
-  "absolute_error_p90": 0.8499997331846645,
+  "mae_improvement_percent": 36.45225025224714,
+  "absolute_error_p90": 0.8483573728354977,
   "feature_importance": [
     {
       "name": "Chu kỳ giờ sin",
-      "value": 0.2756655115019649
+      "value": 0.26769554590085315
     },
     {
       "name": "Chu kỳ giờ cos",
-      "value": 0.1588899128606735
+      "value": 0.15614304600588955
     },
     {
       "name": "Biến thiên nhiệt độ 1 giờ",
-      "value": 0.1548523531185003
+      "value": 0.15112170401562722
     },
     {
       "name": "Độ ẩm hiện tại",
-      "value": 0.03861139994187831
+      "value": 0.03832217986058487
     },
     {
       "name": "Nhiệt độ giờ hiện tại",
-      "value": 0.0368167950340267
-    },
-    {
-      "name": "Biến thiên áp suất 3 giờ",
-      "value": 0.033019376807213376
+      "value": 0.03688429712584137
     },
     {
       "name": "Biến thiên nhiệt độ 3 giờ",
-      "value": 0.03065151556540705
+      "value": 0.03168445526927069
+    },
+    {
+      "name": "Biến thiên áp suất 3 giờ",
+      "value": 0.030607418915538084
     },
     {
       "name": "Độ lệch chuẩn nhiệt độ 6 giờ",
-      "value": 0.02672757713169601
+      "value": 0.02779820805711426
     },
     {
       "name": "Nhiệt độ trễ 6 giờ",
-      "value": 0.024237249809356085
+      "value": 0.02391588747246434
     },
     {
       "name": "Nhiệt độ trễ 24 giờ",
-      "value": 0.02200987960150918
+      "value": 0.023042570998153527
     },
     {
       "name": "Chu kỳ năm sin",
-      "value": 0.021622106579381444
+      "value": 0.022693551512412292
     },
     {
       "name": "Chu kỳ năm cos",
-      "value": 0.020017502581159922
+      "value": 0.020562101549152705
     },
     {
       "name": "Tốc độ gió hiện tại",
-      "value": 0.0168575154857835
+      "value": 0.01823938429549743
     },
     {
       "name": "Mây che phủ hiện tại",
-      "value": 0.01649827192453813
-    },
-    {
-      "name": "Áp suất hiện tại",
-      "value": 0.013595439618477922
+      "value": 0.017456918713490654
     },
     {
       "name": "Biến thiên gió 3 giờ",
-      "value": 0.013562454826290898
+      "value": 0.014706342439910999
+    },
+    {
+      "name": "Áp suất hiện tại",
+      "value": 0.014652477466394425
     },
     {
       "name": "Biến thiên độ ẩm 3 giờ",
-      "value": 0.012320235908558502
+      "value": 0.013142894072715702
     },
     {
       "name": "Nhiệt độ trễ 3 giờ",
-      "value": 0.011928172773835283
+      "value": 0.012782921069127566
     },
     {
       "name": "Trung bình nhiệt độ 24 giờ",
-      "value": 0.011435714309627188
+      "value": 0.01246393452814643
     },
     {
       "name": "Trung bình nhiệt độ 6 giờ",
-      "value": 0.011098262772124124
+      "value": 0.011792243038469251
     },
     {
       "name": "Biến thiên mây 3 giờ",
-      "value": 0.010761525257837933
+      "value": 0.011736209768284952
     },
     {
       "name": "Nhiệt độ trễ 12 giờ",
-      "value": 0.010456293388668174
+      "value": 0.011591299382099286
     },
     {
       "name": "Nhiệt độ trễ 2 giờ",
-      "value": 0.009996391654752933
+      "value": 0.011300827928310308
     },
     {
       "name": "Nhiệt độ trễ 1 giờ",
-      "value": 0.009745006025059606
+      "value": 0.010090063274060208
     },
     {
       "name": "Trung bình nhiệt độ 3 giờ",
-      "value": 0.008623535521679054
+      "value": 0.009573517340590896
     }
   ],
   "source": {
@@ -159,15 +159,65 @@
   },
   "parameters": {
     "n_estimators": 160,
-    "max_depth": 14,
     "min_samples_leaf": 3,
     "max_features": 0.9,
-    "random_state": 42
+    "random_state": 42,
+    "max_depth": 20
   },
-  "training_seconds": 6.423,
+  "validation": {
+    "candidate_train_samples": 6113,
+    "candidate_train_end_target": "2026-07-18T17:00",
+    "validation_samples": 873,
+    "validation_start_target": "2026-07-18T19:00",
+    "validation_end_target": "2026-08-24T03:00",
+    "gap_samples": 1,
+    "metric": "mae",
+    "selected": {
+      "n_estimators": 160,
+      "min_samples_leaf": 3,
+      "max_features": 0.9,
+      "random_state": 42,
+      "max_depth": 20
+    },
+    "mae": 0.3331596446136411,
+    "candidates": [
+      {
+        "parameters": {
+          "n_estimators": 160,
+          "min_samples_leaf": 3,
+          "max_features": 0.9,
+          "random_state": 42,
+          "max_depth": 14
+        },
+        "mae": 0.33384779358327676
+      },
+      {
+        "parameters": {
+          "n_estimators": 160,
+          "min_samples_leaf": 3,
+          "max_features": 0.9,
+          "random_state": 42,
+          "max_depth": 8
+        },
+        "mae": 0.3345528100150151
+      },
+      {
+        "parameters": {
+          "n_estimators": 160,
+          "min_samples_leaf": 3,
+          "max_features": 0.9,
+          "random_state": 42,
+          "max_depth": 20
+        },
+        "mae": 0.3331596446136411
+      }
+    ],
+    "selection_seconds": 6.595
+  },
+  "training_seconds": 13.974,
   "sklearn_version": "1.8.0",
   "numpy_version": "2.5.3",
   "joblib_version": "1.6.0",
   "note": "Kiểm thử trên ERA5 tái phân tích, không phải xác minh trực tiếp bằng trạm đo. Độ quan trọng không chứng minh quan hệ nhân quả.",
-  "artifact_sha256": "19370813635961edbf614f383b2f06740e48477cd3caaaf10b7067eade3ee8ac"
+  "artifact_sha256": "3ac3f0a6b3dfa3e99b5b0995e810d07c820a5f0f4a8eb37a33d888c191a454de"
 }

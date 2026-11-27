@@ -6,7 +6,6 @@ Mây Việt là đồ án dự báo thời tiết cho các địa điểm ở Vi
 
 Giải nén toàn bộ gói rồi mở PowerShell trong thư mục `MayViet`. Thư mục `dist/` nằm cạnh `app.py`. Nên dùng Python 3.12 hoặc 3.13 để dùng các mô hình TP.HCM đi kèm.
 
-<<<<<<< HEAD
 ```powershell
 python -m pip install -r requirements.txt
 python app.py
@@ -15,11 +14,6 @@ python app.py
 Nếu Windows dùng lệnh `py`, thay `python` bằng `py` trong các lệnh trên. Trình duyệt thường mở ở `http://localhost:5173`. Nếu cổng đó đang bận, mở địa chỉ được in trong PowerShell. Giữ cửa sổ PowerShell mở khi dùng app, nhấn **Ctrl+C** để dừng.
 
 ### Chạy Full chức năng
-=======
-python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.8.0
-python -m pip install -r requirements-ai.txt
-python app.py
->>>>>>> f729c1181c2b78d202aee82636cea9a186bd9396
 
 Dùng Python 3.12 hoặc 3.13. Cài thêm PyTorch bản CPU và các thư viện AI trong cùng môi trường Python rồi khởi động lại app.
 
@@ -53,15 +47,34 @@ python train_model.py --latitude 10.78 --longitude 106.70 --offline
 
 Bốn mô hình dự báo được kiểm thử trên cùng 1.747 mốc giờ của dữ liệu ERA5. Ở mỗi mốc, mô hình dự báo trước một giờ và chỉ dùng dữ liệu đã có lúc dự báo. Cách đối chứng **Persistence** lấy nhiệt độ giờ hiện tại làm dự báo cho giờ sau.
 
+Random Forest và Gradient Boosting chọn cấu hình theo MAE trên 873 mẫu validation sau 6.113 mẫu huấn luyện. Hai mô hình được huấn luyện lại trên 6.987 mẫu trước tập test sau khi đã chọn tham số. Tập test gồm 1.747 mốc cuối. Trình tự và các mốc này được lưu trong báo cáo JSON của từng mô hình.
+
 | Phương pháp | MAE (°C) | RMSE (°C) |
 | --- | ---: | ---: |
-| Random Forest | 0,347 | 0,512 |
+| Random Forest | 0,347 | 0,513 |
 | Holt–Winters | 0,436 | 0,609 |
 | Gradient Boosting | 0,347 | 0,520 |
 | Chronos‑2 Small | 0,381 | 0,533 |
 | Persistence | 0,546 | 0,762 |
 
 Bảng tính sai số trên toàn bộ tập kiểm thử. Biểu đồ trong app hiển thị tối đa 72 mốc cuối. Số liệu tổng hợp nằm trong `models/`, còn CSV kết quả từng giờ của Random Forest nằm trong `reports/`.
+
+### Tái lập số liệu trong báo cáo
+
+Chạy lệnh sau với dữ liệu và mô hình TP.HCM đi kèm để tính lại các bảng trong báo cáo.
+
+```powershell
+python evaluate_report.py
+```
+
+Kết quả nằm tại `reports/validation_analysis/analysis.json` và `reports/validation_analysis/holdout_predictions.csv`. Cột dự báo Chronos trong CSV đi kèm có 72 mốc cuối, còn MAE và RMSE được tính trên toàn bộ tập test từ lần chạy Chronos đã lưu.
+
+Cài thêm Matplotlib và chạy lệnh tạo lại các hình kết quả.
+
+```powershell
+python -m pip install matplotlib==3.11.2
+python evaluate_report.py --figures-dir reports/validation_analysis/figures
+```
 
 ## Dữ liệu và mã nguồn
 
